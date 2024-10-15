@@ -3,207 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joyeux Anniversaire Marc!</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <title>Calculateur de PRU</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-        body, html {
-            margin: 0;
-            padding: 0;
-            font-family: 'Roboto', sans-serif;
-            height: 100%;
-            overflow: hidden;
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
             background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
         }
-        .page {
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            position: absolute;
-            transition: transform 0.5s ease;
-        }
-        #page1 { background: linear-gradient(45deg, #FFD700, #FFA500); }
-        #page2 { background: linear-gradient(45deg, #FF69B4, #FF1493); transform: translateX(100%); }
-        #page3 { background: linear-gradient(45deg, #1E90FF, #4169E1); transform: translateX(100%); }
-        #page4 { background: linear-gradient(45deg, #32CD32, #228B22); transform: translateX(100%); }
-        h1 { font-size: 2.5em; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; }
-        .btn {
-            padding: 12px 24px;
-            font-size: 1.2em;
-            margin: 15px;
-            cursor: pointer;
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
             background-color: white;
-            border: none;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .btn:hover { transform: scale(1.05); box-shadow: 0 6px 8px rgba(0,0,0,0.15); }
-        #gift {
-            font-size: 120px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-        #gift:hover { transform: scale(1.1) rotate(10deg); }
-        #message { 
-            display: none;
-            text-align: center;
-            background-color: rgba(255,255,255,0.9);
             padding: 20px;
             border-radius: 10px;
-            max-width: 80%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .heart { color: red; font-size: 24px; }
-        #fireworks { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        .memory {
-            background-color: rgba(255,255,255,0.9);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px;
-            max-width: 80%;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .memory-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #333;
-        }
-        #memories {
-            max-height: 70vh;
-            overflow-y: auto;
+        input {
+            width: 100%;
             padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: #27ae60;
         }
     </style>
 </head>
 <body>
-    <div id="page1" class="page">
-        <h1>Bienvenue sur la surprise d'anniversaire de Marc!</h1>
-        <button class="btn" onclick="nextPage()">Commencer l'aventure</button>
-    </div>
-    
-    <div id="page2" class="page">
-        <h1>Un cadeau spécial pour toi</h1>
-        <div id="gift">🎁</div>
-        <div id="message">
-            <h2>Joyeux Anniversaire Marc! <span class="heart">❤️</span></h2>
-            <p>Mon amour, tu illumines ma vie chaque jour.</p>
-            <p>Merci d'être toi, tout simplement extraordinaire.</p>
-            <p>Je t'aime plus que tout!</p>
-        </div>
-        <button class="btn" onclick="nextPage()" style="display:none;" id="nextBtn">Suite de la surprise</button>
-    </div>
-    
-    <div id="page3" class="page">
-        <h1>Nos meilleurs moments</h1>
-        <div id="memories"></div>
-        <button class="btn" onclick="nextPage()">Dernière surprise</button>
-    </div>
-    
-    <div id="page4" class="page">
-        <h1>Joyeux Anniversaire Marc!</h1>
-        <button class="btn" onclick="startFireworks()">Fêtons ça!</button>
-        <canvas id="fireworks"></canvas>
+    <div class="container">
+        <h2>Calculateur de PRU</h2>
+        <input type="number" id="currentPRU" placeholder="Votre PRU actuel">
+        <input type="number" id="currentShares" placeholder="Nombre d'actions actuelles">
+        <input type="number" id="newSharePrice" placeholder="Prix de la nouvelle action">
+        <input type="number" id="addShares" placeholder="Nombre d'actions à ajouter">
+        <button onclick="calculate()">Calculer</button>
+        <div id="result">Nouveau PRU : </div>
     </div>
 
     <script>
-        let currentPage = 1;
-        
-        function nextPage() {
-            if (currentPage < 4) {
-                gsap.to(`#page${currentPage}`, {x: '-100%', duration: 0.7, ease: "power2.inOut"});
-                currentPage++;
-                gsap.to(`#page${currentPage}`, {x: '0%', duration: 0.7, ease: "power2.inOut"});
-                if (currentPage === 3) createMemories();
-            }
-        }
+        function calculate() {
+            let currentPRU = parseFloat(document.getElementById('currentPRU').value);
+            let currentShares = parseFloat(document.getElementById('currentShares').value);
+            let newSharePrice = parseFloat(document.getElementById('newSharePrice').value);
+            let addShares = parseFloat(document.getElementById('addShares').value);
 
-        document.getElementById('gift').addEventListener('click', function() {
-            gsap.to(this, {scale: 1.2, rotation: 720, duration: 1, ease: "elastic.out(1, 0.3)"});
-            setTimeout(() => {
-                this.style.display = 'none';
-                gsap.from('#message', {scale: 0, opacity: 0, duration: 0.5, ease: "back.out(1.7)"});
-                document.getElementById('message').style.display = 'block';
-                document.getElementById('nextBtn').style.display = 'block';
-            }, 1000);
-        });
+            let newPRU = currentPRU;
 
-        function createMemories() {
-            const memories = [
-                { title: "Notre première balade romantique", content: "Au WEI (je crois) on avait fait une balade à deux, main dans la main" },
-                { title: "Un week-end inoubliable", content: "Le WEI, trop bien je m'en souviens" },
-                { title: "Un moment hilarant", content: "L'hélicobite" },
-                { title: "Notre chanson", content: "Chez nous de Patrick Fiori" },
-                { title: "Notre nouvelle famille", content: "On a adopté Alexis" }
-            ];
-            const container = document.getElementById('memories');
-            memories.forEach((memory, index) => {
-                const div = document.createElement('div');
-                div.className = 'memory';
-                div.innerHTML = `<div class="memory-title">${memory.title}</div><div>${memory.content}</div>`;
-                gsap.from(div, {opacity: 0, y: 50, duration: 0.5, delay: index * 0.2});
-                container.appendChild(div);
-            });
-        }
-
-        function startFireworks() {
-            const canvas = document.getElementById('fireworks');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            function createFirework() {
-                const x = Math.random() * canvas.width;
-                const y = canvas.height;
-                const color = `hsl(${Math.random() * 360}, 100%, 50%)`;
-                const particles = [];
-
-                for (let i = 0; i < 50; i++) {
-                    particles.push({
-                        x: x,
-                        y: y,
-                        vx: Math.random() * 6 - 3,
-                        vy: Math.random() * -15 - 10,
-                        radius: Math.random() * 2 + 1,
-                        color: color
-                    });
-                }
-
-                function animate() {
-                    ctx.globalAlpha = 0.1;
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.globalAlpha = 1;
-
-                    for (let i = 0; i < particles.length; i++) {
-                        const p = particles[i];
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                        ctx.fillStyle = p.color;
-                        ctx.fill();
-
-                        p.x += p.vx;
-                        p.y += p.vy;
-                        p.vy += 0.1;
-                        p.radius *= 0.99;
-
-                        if (p.radius < 0.1) {
-                            particles.splice(i, 1);
-                            i--;
-                        }
-                    }
-
-                    if (particles.length > 0) {
-                        requestAnimationFrame(animate);
-                    }
-                }
-
-                animate();
+            for (let i = 0; i < addShares; i++) {
+                newPRU = ((newPRU * currentShares) + newSharePrice) / (currentShares + 1);
             }
 
-            setInterval(createFirework, 1000);
+            document.getElementById('result').innerHTML = `Nouveau PRU : ${newPRU.toFixed(2)}`;
         }
     </script>
 </body>
