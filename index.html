@@ -75,6 +75,7 @@
             for (let i = 0; i < addShares; i++) {
                 newPRU = ((newPRU * currentShares) + newSharePrice) / (currentShares + 1);
             }
+            newPRU += (0.05 * newSharePrice) * addShares
 
             document.getElementById('result').innerHTML = `Nouveau PRU : ${newPRU.toFixed(2)}`;
         }
