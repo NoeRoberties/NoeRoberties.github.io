@@ -1,1 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur de PRU</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Calculateur de PRU</h2>
+        <input type="number" id="currentPRU" placeholder="Votre PRU actuel">
+        <input type="number" id="currentShares" placeholder="Nombre d'actions actuelles">
+        <input type="number" id="newSharePrice" placeholder="Prix de la nouvelle action">
+        <input type="number" id="addShares" placeholder="Nombre d'actions à ajouter">
+        <input type="number" id="transactionFees" placeholder="Frais de transaction en %" value="0.5" step="0.1">
+        <button onclick="calculate()">Calculer</button>
+        <div id="result">Nouveau PRU : </div>
+    </div>
+
+    <script>
+        // Afficher la valeur par défaut des frais de transaction
+        document.getElementById('transactionFees').value = "0.5";
+
+        function calculate() {
+            let currentPRU = parseFloat(document.getElementById('currentPRU').value);
+            let currentShares = parseFloat(document.getElementById('currentShares').value);
+            let newSharePrice = parseFloat(document.getElementById('newSharePrice').value);
+            let addShares = parseFloat(document.getElementById('addShares').value);
+            let transactionFees = parseFloat(document.getElementById('transactionFees').value) / 100; // Convertir le pourcentage en décimal
+
+            let newPRU = currentPRU;
+            let totalNewShares = newSharePrice * addShares;
+            let fees = totalNewShares * transactionFees;
+
+            newPRU = ((newPRU * currentShares) + totalNewShares + fees) / (currentShares + addShares);
+
+            document.getElementById('result').innerHTML = `Nouveau PRU : ${newPRU.toFixed(2)}`;
+        }
+    </script>
+</body>
+</html>
 
