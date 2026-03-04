@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculateur de PRU</title>
+    <title>PRU Calculator</title>
     
     <!-- PWA Configuration -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3498db">
-    <meta name="description" content="Calculateur de Prix de Revient Unitaire pour vos actions">
+    <meta name="description" content="Average Cost Basis (ACPS) calculator for your stock positions">
     
     <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" href="PRU_logo_192.png">
@@ -131,29 +131,29 @@
 </head>
 <body>
     <div class="container">
-        <h2>Calculateur de PRU</h2>
-        <label for="currentPRU">PRU actuel (€)</label>
-        <input type="number" id="currentPRU" placeholder="ex : 24.50">
-        <label for="currentShares">Nombre d'actions actuelles</label>
-        <input type="number" id="currentShares" placeholder="ex : 100">
+        <h2>ACPS Calculator</h2>
+        <label for="currentPRU">Current ACPS (€)</label>
+        <input type="number" id="currentPRU" placeholder="e.g. 24.50">
+        <label for="currentShares">Current number of shares</label>
+        <input type="number" id="currentShares" placeholder="e.g. 100">
         <div class="input-hint" id="hintCurrentValue"></div>
-        <label for="newSharePrice">Prix de la nouvelle action (€)</label>
-        <input type="number" id="newSharePrice" placeholder="ex : 22.00">
-        <label for="addShares">Nombre d'actions à ajouter</label>
-        <input type="number" id="addShares" placeholder="ex : 50">
+        <label for="newSharePrice">New share price (€)</label>
+        <input type="number" id="newSharePrice" placeholder="e.g. 22.00">
+        <label for="addShares">Number of shares to add</label>
+        <input type="number" id="addShares" placeholder="e.g. 50">
         <div class="input-hint" id="hintNewValue"></div>
-        <label for="transactionFees">Frais de transaction (%)</label>
-        <input type="number" id="transactionFees" placeholder="ex : 0.5" value="0.5" step="0.1">
-        <button onclick="calculate()">Calculer</button>
-        <div id="result">Nouveau PRU : </div>
+        <label for="transactionFees">Transaction fees (%)</label>
+        <input type="number" id="transactionFees" placeholder="e.g. 0.5" value="0.5" step="0.1">
+        <button onclick="calculate()">Calculate</button>
+        <div id="result">New ACPS: </div>
 
         <hr class="section-divider">
-        <div class="section-title">📈 Simulation de vente avant/après achat</div>
-        <label for="sellPrice">Prix de vente (€)</label>
-        <input type="number" id="sellPrice" placeholder="ex : 30.00">
-        <label for="sellShares">Nombre d'actions à vendre</label>
-        <input type="number" id="sellShares" placeholder="ex : 50">
-        <button onclick="simulateSell()">Simuler la vente</button>
+        <div class="section-title">📈 Sell simulation — before / after purchase</div>
+        <label for="sellPrice">Sell price (€)</label>
+        <input type="number" id="sellPrice" placeholder="e.g. 30.00">
+        <label for="sellShares">Number of shares to sell</label>
+        <input type="number" id="sellShares" placeholder="e.g. 50">
+        <button onclick="simulateSell()">Simulate sale</button>
         <div id="resultSell" style="display:none;"></div>
     </div>
 
@@ -170,7 +170,7 @@
             let shares = parseFloat(document.getElementById('currentShares').value);
             let hint = document.getElementById('hintCurrentValue');
             if (!isNaN(pru) && !isNaN(shares) && pru > 0 && shares > 0) {
-                hint.textContent = 'Valeur actuelle : ' + formatMoney(pru * shares);
+                hint.textContent = 'Current value: ' + formatMoney(pru * shares);
                 hint.classList.add('active');
             } else {
                 hint.textContent = '';
@@ -185,7 +185,7 @@
             let hint = document.getElementById('hintNewValue');
             if (!isNaN(price) && !isNaN(shares) && price > 0 && shares > 0) {
                 let total = price * shares * (1 + (isNaN(fees) ? 0 : fees));
-                hint.textContent = 'Coût total achat : ' + formatMoney(total);
+                hint.textContent = 'Total purchase cost: ' + formatMoney(total);
                 hint.classList.add('active');
             } else {
                 hint.textContent = '';
@@ -220,8 +220,8 @@
             lastNewPRU = newPRU;
 
             document.getElementById('result').innerHTML = `
-                <div class="result-line result-highlight">📊 Nouveau PRU : <strong>${newPRU.toFixed(2)} €</strong></div>
-                <div class="result-line result-highlight">💰 Valeur totale (${totalShares} actions) : <strong>${formatMoney(totalValue)}</strong></div>
+                <div class="result-line result-highlight">📊 New ACPS: <strong>${newPRU.toFixed(2)} €</strong></div>
+                <div class="result-line result-highlight">💰 Total value (${totalShares} shares): <strong>${formatMoney(totalValue)}</strong></div>
             `;
         }
 
@@ -243,26 +243,26 @@
 
             if (isNaN(sellPrice) || isNaN(sellShares) || sellShares <= 0 || sellPrice <= 0) {
                 resultDiv.style.display = 'block';
-                resultDiv.innerHTML = '<div class="neutral">⚠️ Veuillez remplir le prix et le nombre d\'actions à vendre.</div>';
+                resultDiv.innerHTML = '<div class="neutral">⚠️ Please enter a sell price and number of shares.</div>';
                 return;
             }
 
             let proceeds = sellPrice * sellShares;
-            let html = `<div class="result-line">💶 Produit de la vente (${sellShares} actions) : <strong>${formatMoney(proceeds)}</strong></div>`;
+            let html = `<div class="result-line">💶 Sale proceeds (${sellShares} shares): <strong>${formatMoney(proceeds)}</strong></div>`;
 
-            // P&L avec l'ancien PRU — plafonné au nombre d'actions qu'on avait AVANT l'achat
+            // P&L with the old ACPS — capped at shares held BEFORE the purchase
             if (!isNaN(currentPRU) && currentPRU > 0 && !isNaN(currentShares) && currentShares > 0) {
                 let sharesOld = Math.min(sellShares, currentShares);
                 let gainOld = (sellPrice - currentPRU) * sharesOld;
                 let gainOldPct = ((sellPrice - currentPRU) / currentPRU) * 100;
                 let cls = benefitClass(gainOld);
                 let capNote = sharesOld < sellShares
-                    ? ` <span style="font-size:0.8em;color:#7f8c8d;">(limité à ${sharesOld} actions détenues avant achat)</span>`
+                    ? ` <span style="font-size:0.8em;color:#7f8c8d;">(capped at ${sharesOld} shares held before purchase)</span>`
                     : '';
-                html += `<div class="result-line ${cls}">📌 P&L avant achat — PRU ${currentPRU.toFixed(2)} € × ${sharesOld} actions :${capNote}<br><strong>${benefitSign(gainOld)}${formatMoney(gainOld)}</strong> (${benefitSign(gainOldPct)}${gainOldPct.toFixed(2)} %)</div>`;
+                html += `<div class="result-line ${cls}">P&L before purchase — ACPS ${currentPRU.toFixed(2)} € × ${sharesOld} shares:${capNote}<br><strong>${benefitSign(gainOld)}${formatMoney(gainOld)}</strong> (${benefitSign(gainOldPct)}${gainOldPct.toFixed(2)} %)</div>`;
             }
 
-            // P&L avec le nouveau PRU — plafonné au nombre d'actions qu'on a APRÈS l'achat
+            // P&L with the new ACPS — capped at shares held AFTER the purchase
             if (lastNewPRU !== null) {
                 let totalSharesAfter = (!isNaN(currentShares) ? currentShares : 0) + (!isNaN(addShares) ? addShares : 0);
                 let sharesNew = totalSharesAfter > 0 ? Math.min(sellShares, totalSharesAfter) : sellShares;
@@ -270,11 +270,11 @@
                 let gainNewPct = ((sellPrice - lastNewPRU) / lastNewPRU) * 100;
                 let cls = benefitClass(gainNew);
                 let capNote = sharesNew < sellShares
-                    ? ` <span style="font-size:0.8em;color:#7f8c8d;">(limité à ${sharesNew} actions détenues après achat)</span>`
+                    ? ` <span style="font-size:0.8em;color:#7f8c8d;">(capped at ${sharesNew} shares held after purchase)</span>`
                     : '';
-                html += `<div class="result-line ${cls}">🆕 P&L après achat — PRU ${lastNewPRU.toFixed(2)} € × ${sharesNew} actions :${capNote}<br><strong>${benefitSign(gainNew)}${formatMoney(gainNew)}</strong> (${benefitSign(gainNewPct)}${gainNewPct.toFixed(2)} %)</div>`;
+                html += `<div class="result-line ${cls}">P&L after purchase — ACPS ${lastNewPRU.toFixed(2)} € × ${sharesNew} shares:${capNote}<br><strong>${benefitSign(gainNew)}${formatMoney(gainNew)}</strong> (${benefitSign(gainNewPct)}${gainNewPct.toFixed(2)} %)</div>`;
             } else {
-                html += `<div class="neutral result-line">ℹ️ Calculez d'abord le nouveau PRU pour voir la comparaison après achat.</div>`;
+                html += `<div class="neutral result-line">ℹ️ Calculate the new ACPS first to see the after-purchase comparison.</div>`;
             }
 
             resultDiv.style.display = 'block';
@@ -286,40 +286,40 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
                     .then(registration => {
-                        console.log('✅ Service Worker enregistré avec succès:', registration.scope);
+                        console.log('✅ Service Worker registered successfully:', registration.scope);
                         
-                        // Vérifier les mises à jour toutes les heures
+                        // Check for updates every hour
                         setInterval(() => {
                             registration.update();
-                            console.log('🔄 Vérification des mises à jour...');
-                        }, 3600000); // 1 heure
+                            console.log('🔄 Checking for updates...');
+                        }, 3600000); // 1 hour
                         
-                        // Vérifier immédiatement s'il y a une mise à jour
+                        // Check immediately for an update
                         registration.update();
                     })
                     .catch(err => {
-                        console.log('❌ Erreur lors de l\'enregistrement du Service Worker:', err);
+                        console.log('❌ Service Worker registration failed:', err);
                     });
                 
-                // Détecter quand un nouveau Service Worker est en attente
+                // Detect when a new Service Worker is waiting
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    console.log('🔄 Nouvelle version détectée, rechargement...');
+                    console.log('🔄 New version detected, reloading...');
                     window.location.reload();
                 });
             });
         }
 
-        // Détection de l'installation de la PWA
+        // Detect PWA install prompt
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            console.log('💡 L\'application peut être installée');
+            console.log('💡 The app can be installed');
         });
 
-        // Notification quand l'app est installée
+        // Notify when the app is installed
         window.addEventListener('appinstalled', () => {
-            console.log('✅ PWA installée avec succès !');
+            console.log('✅ PWA installed successfully!');
             deferredPrompt = null;
         });
     </script>
