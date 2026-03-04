@@ -4,6 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculateur de PRU</title>
+    
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3498db">
+    <meta name="description" content="Calculateur de Prix de Revient Unitaire pour vos actions">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="PRU_logo_192.png">
+    
+    <!-- iOS meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PRU Calculator">
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -50,6 +63,31 @@
             font-weight: bold;
             color: #27ae60;
         }
+        .result-line {
+            padding: 6px 0;
+            border-bottom: 1px solid #dce1e7;
+            font-size: 0.95em;
+        }
+        .result-line:last-child {
+            border-bottom: none;
+        }
+        .result-highlight {
+            font-size: 1.1em;
+            color: #2980b9;
+            padding-top: 8px;
+        }
+        .input-hint {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            text-align: right;
+            margin: -6px 0 6px 0;
+            min-height: 18px;
+            transition: color 0.2s;
+        }
+        .input-hint.active {
+            color: #27ae60;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -57,8 +95,10 @@
         <h2>Calculateur de PRU</h2>
         <input type="number" id="currentPRU" placeholder="Votre PRU actuel">
         <input type="number" id="currentShares" placeholder="Nombre d'actions actuelles">
+        <div class="input-hint" id="hintCurrentValue"></div>
         <input type="number" id="newSharePrice" placeholder="Prix de la nouvelle action">
         <input type="number" id="addShares" placeholder="Nombre d'actions à ajouter">
+        <div class="input-hint" id="hintNewValue"></div>
         <input type="number" id="transactionFees" placeholder="Frais de transaction en %" value="0.5" step="0.1">
         <button onclick="calculate()">Calculer</button>
         <div id="result">Nouveau PRU : </div>
@@ -68,22 +108,108 @@
         // Afficher la valeur par défaut des frais de transaction
         document.getElementById('transactionFees').value = "0.5";
 
+        function formatMoney(value) {
+            return value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+        }
+
+        function updateCurrentHint() {
+            let pru = parseFloat(document.getElementById('currentPRU').value);
+            let shares = parseFloat(document.getElementById('currentShares').value);
+            let hint = document.getElementById('hintCurrentValue');
+            if (!isNaN(pru) && !isNaN(shares) && pru > 0 && shares > 0) {
+                hint.textContent = 'Valeur actuelle : ' + formatMoney(pru * shares);
+                hint.classList.add('active');
+            } else {
+                hint.textContent = '';
+                hint.classList.remove('active');
+            }
+        }
+
+        function updateNewHint() {
+            let price = parseFloat(document.getElementById('newSharePrice').value);
+            let shares = parseFloat(document.getElementById('addShares').value);
+            let fees = parseFloat(document.getElementById('transactionFees').value) / 100;
+            let hint = document.getElementById('hintNewValue');
+            if (!isNaN(price) && !isNaN(shares) && price > 0 && shares > 0) {
+                let total = price * shares * (1 + (isNaN(fees) ? 0 : fees));
+                hint.textContent = 'Coût total achat : ' + formatMoney(total);
+                hint.classList.add('active');
+            } else {
+                hint.textContent = '';
+                hint.classList.remove('active');
+            }
+        }
+
+        ['currentPRU', 'currentShares'].forEach(id =>
+            document.getElementById(id).addEventListener('input', updateCurrentHint)
+        );
+        ['newSharePrice', 'addShares', 'transactionFees'].forEach(id =>
+            document.getElementById(id).addEventListener('input', updateNewHint)
+        );
+
         function calculate() {
             let currentPRU = parseFloat(document.getElementById('currentPRU').value);
             let currentShares = parseFloat(document.getElementById('currentShares').value);
             let newSharePrice = parseFloat(document.getElementById('newSharePrice').value);
             let addShares = parseFloat(document.getElementById('addShares').value);
-            let transactionFees = parseFloat(document.getElementById('transactionFees').value) / 100; // Convertir le pourcentage en décimal
+            let transactionFees = parseFloat(document.getElementById('transactionFees').value) / 100;
 
-            let newPRU = currentPRU;
             let totalNewShares = newSharePrice * addShares;
             let fees = totalNewShares * transactionFees;
 
-            newPRU = ((newPRU * currentShares) + totalNewShares + fees) / (currentShares + addShares);
+            let newPRU = ((currentPRU * currentShares) + totalNewShares + fees) / (currentShares + addShares);
+            let totalShares = currentShares + addShares;
+            let totalValue = newPRU * totalShares;
 
-            document.getElementById('result').innerHTML = `Nouveau PRU : ${newPRU.toFixed(2)}`;
+            document.getElementById('result').innerHTML = `
+                <div class="result-line result-highlight">📊 Nouveau PRU : <strong>${newPRU.toFixed(2)} €</strong></div>
+                <div class="result-line result-highlight">💰 Valeur totale (${totalShares} actions) : <strong>${formatMoney(totalValue)}</strong></div>
+            `;
         }
     </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker enregistré avec succès:', registration.scope);
+                        
+                        // Vérifier les mises à jour toutes les heures
+                        setInterval(() => {
+                            registration.update();
+                            console.log('🔄 Vérification des mises à jour...');
+                        }, 3600000); // 1 heure
+                        
+                        // Vérifier immédiatement s'il y a une mise à jour
+                        registration.update();
+                    })
+                    .catch(err => {
+                        console.log('❌ Erreur lors de l\'enregistrement du Service Worker:', err);
+                    });
+                
+                // Détecter quand un nouveau Service Worker est en attente
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    console.log('🔄 Nouvelle version détectée, rechargement...');
+                    window.location.reload();
+                });
+            });
+        }
+
+        // Détection de l'installation de la PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('💡 L\'application peut être installée');
+        });
+
+        // Notification quand l'app est installée
+        window.addEventListener('appinstalled', () => {
+            console.log('✅ PWA installée avec succès !');
+            deferredPrompt = null;
+        });
+    </script>
+
 </body>
 </html>
 
