@@ -76,6 +76,16 @@
             color: #2980b9;
             padding-top: 8px;
         }
+        .result-highlight .label {
+            font-weight: 400;
+            font-size: 0.9em;
+            color: #5a6a7a;
+        }
+        .result-highlight .value {
+            font-weight: 800;
+            font-size: 1.15em;
+            color: #2980b9;
+        }
         label {
             display: block;
             font-size: 0.82em;
@@ -104,7 +114,7 @@
         }
         .section-title {
             font-size: 0.9em;
-            font-weight: 700;
+            font-weight: 900;
             color: #3498db;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -148,7 +158,7 @@
         <div id="result">New ACPS: </div>
 
         <hr class="section-divider">
-        <div class="section-title">📈 Sell simulation — before / after purchase</div>
+        <div class="section-title">Sell simulation — before / after purchase</div>
         <label for="sellPrice">Sell price (€)</label>
         <input type="number" id="sellPrice" placeholder="e.g. 30.00">
         <label for="sellShares">Number of shares to sell</label>
@@ -220,8 +230,8 @@
             lastNewPRU = newPRU;
 
             document.getElementById('result').innerHTML = `
-                <div class="result-line result-highlight">📊 New ACPS: <strong>${newPRU.toFixed(2)} €</strong></div>
-                <div class="result-line result-highlight">💰 Total value (${totalShares} shares): <strong>${formatMoney(totalValue)}</strong></div>
+                <div class="result-line result-highlight"><span class="label">New ACB:</span> <span class="value">${newPRU.toFixed(2)} €</span></div>
+                <div class="result-line result-highlight"><span class="label">Total value (${totalShares} shares):</span> <span class="value">${formatMoney(totalValue)}</span></div>
             `;
         }
 
@@ -243,12 +253,12 @@
 
             if (isNaN(sellPrice) || isNaN(sellShares) || sellShares <= 0 || sellPrice <= 0) {
                 resultDiv.style.display = 'block';
-                resultDiv.innerHTML = '<div class="neutral">⚠️ Please enter a sell price and number of shares.</div>';
+                resultDiv.innerHTML = '<div class="neutral">Please enter a sell price and number of shares.</div>';
                 return;
             }
 
             let proceeds = sellPrice * sellShares;
-            let html = `<div class="result-line">💶 Sale proceeds (${sellShares} shares): <strong>${formatMoney(proceeds)}</strong></div>`;
+            let html = `<div class="result-line">Sale proceeds (${sellShares} shares): <strong>${formatMoney(proceeds)}</strong></div>`;
 
             // P&L with the old ACPS — capped at shares held BEFORE the purchase
             if (!isNaN(currentPRU) && currentPRU > 0 && !isNaN(currentShares) && currentShares > 0) {
@@ -274,7 +284,7 @@
                     : '';
                 html += `<div class="result-line ${cls}">P&L after purchase — ACPS ${lastNewPRU.toFixed(2)} € × ${sharesNew} shares:${capNote}<br><strong>${benefitSign(gainNew)}${formatMoney(gainNew)}</strong> (${benefitSign(gainNewPct)}${gainNewPct.toFixed(2)} %)</div>`;
             } else {
-                html += `<div class="neutral result-line">ℹ️ Calculate the new ACPS first to see the after-purchase comparison.</div>`;
+                html += `<div class="neutral result-line">Calculate the new ACB first to see the after-purchase comparison.</div>`;
             }
 
             resultDiv.style.display = 'block';
@@ -286,24 +296,24 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
                     .then(registration => {
-                        console.log('✅ Service Worker registered successfully:', registration.scope);
+                        console.log('Service Worker registered successfully:', registration.scope);
                         
                         // Check for updates every hour
                         setInterval(() => {
                             registration.update();
-                            console.log('🔄 Checking for updates...');
+                            console.log('Checking for updates...');
                         }, 3600000); // 1 hour
                         
                         // Check immediately for an update
                         registration.update();
                     })
                     .catch(err => {
-                        console.log('❌ Service Worker registration failed:', err);
+                        console.log('Service Worker registration failed:', err);
                     });
                 
                 // Detect when a new Service Worker is waiting
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    console.log('🔄 New version detected, reloading...');
+                    console.log('New version detected, reloading...');
                     window.location.reload();
                 });
             });
@@ -314,12 +324,12 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            console.log('💡 The app can be installed');
+            console.log('The app can be installed');
         });
 
         // Notify when the app is installed
         window.addEventListener('appinstalled', () => {
-            console.log('✅ PWA installed successfully!');
+            console.log('PWA installed successfully!');
             deferredPrompt = null;
         });
     </script>
