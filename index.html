@@ -155,7 +155,7 @@
         <label for="transactionFees">Transaction fees (%)</label>
         <input type="number" id="transactionFees" placeholder="e.g. 0.5" value="0.5" step="0.1">
         <button onclick="calculate()">Calculate</button>
-        <div id="result">New ACPS: </div>
+        <div id="result" style="display:none;"></div>
 
         <hr class="section-divider">
         <div class="section-title">Sell simulation — before / after purchase</div>
@@ -229,7 +229,9 @@
 
             lastNewPRU = newPRU;
 
-            document.getElementById('result').innerHTML = `
+            const resultEl = document.getElementById('result');
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = `
                 <div class="result-line result-highlight"><span class="label">New ACB:</span> <span class="value">${newPRU.toFixed(2)} €</span></div>
                 <div class="result-line result-highlight"><span class="label">Total value (${totalShares} shares):</span> <span class="value">${formatMoney(totalValue)}</span></div>
             `;
