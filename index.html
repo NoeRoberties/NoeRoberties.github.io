@@ -76,6 +76,15 @@
             color: #2980b9;
             padding-top: 8px;
         }
+        label {
+            display: block;
+            font-size: 0.82em;
+            font-weight: 600;
+            color: #5a6a7a;
+            margin: 12px 0 3px 4px;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
         .input-hint {
             font-size: 0.85em;
             color: #7f8c8d;
@@ -88,20 +97,64 @@
             color: #27ae60;
             font-weight: bold;
         }
+        .section-divider {
+            border: none;
+            border-top: 2px dashed #d0d9e2;
+            margin: 20px 0 8px 0;
+        }
+        .section-title {
+            font-size: 0.9em;
+            font-weight: 700;
+            color: #3498db;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 4px 2px;
+        }
+        #resultSell {
+            margin-top: 14px;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .gain {
+            color: #27ae60;
+        }
+        .loss {
+            color: #e74c3c;
+        }
+        .neutral {
+            color: #7f8c8d;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Calculateur de PRU</h2>
-        <input type="number" id="currentPRU" placeholder="Votre PRU actuel">
-        <input type="number" id="currentShares" placeholder="Nombre d'actions actuelles">
+        <label for="currentPRU">PRU actuel (€)</label>
+        <input type="number" id="currentPRU" placeholder="ex : 24.50">
+        <label for="currentShares">Nombre d'actions actuelles</label>
+        <input type="number" id="currentShares" placeholder="ex : 100">
         <div class="input-hint" id="hintCurrentValue"></div>
-        <input type="number" id="newSharePrice" placeholder="Prix de la nouvelle action">
-        <input type="number" id="addShares" placeholder="Nombre d'actions à ajouter">
+        <label for="newSharePrice">Prix de la nouvelle action (€)</label>
+        <input type="number" id="newSharePrice" placeholder="ex : 22.00">
+        <label for="addShares">Nombre d'actions à ajouter</label>
+        <input type="number" id="addShares" placeholder="ex : 50">
         <div class="input-hint" id="hintNewValue"></div>
-        <input type="number" id="transactionFees" placeholder="Frais de transaction en %" value="0.5" step="0.1">
+        <label for="transactionFees">Frais de transaction (%)</label>
+        <input type="number" id="transactionFees" placeholder="ex : 0.5" value="0.5" step="0.1">
         <button onclick="calculate()">Calculer</button>
         <div id="result">Nouveau PRU : </div>
+
+        <hr class="section-divider">
+        <div class="section-title">📈 Simulation de vente avant/après achat</div>
+        <label for="sellPrice">Prix de vente (€)</label>
+        <input type="number" id="sellPrice" placeholder="ex : 30.00">
+        <label for="sellShares">Nombre d'actions à vendre</label>
+        <input type="number" id="sellShares" placeholder="ex : 50">
+        <button onclick="simulateSell()">Simuler la vente</button>
+        <div id="resultSell" style="display:none;"></div>
     </div>
 
     <script>
@@ -147,6 +200,9 @@
             document.getElementById(id).addEventListener('input', updateNewHint)
         );
 
+        // Stocke le dernier newPRU calculé pour la simulation de vente
+        let lastNewPRU = null;
+
         function calculate() {
             let currentPRU = parseFloat(document.getElementById('currentPRU').value);
             let currentShares = parseFloat(document.getElementById('currentShares').value);
@@ -161,10 +217,68 @@
             let totalShares = currentShares + addShares;
             let totalValue = newPRU * totalShares;
 
+            lastNewPRU = newPRU;
+
             document.getElementById('result').innerHTML = `
                 <div class="result-line result-highlight">📊 Nouveau PRU : <strong>${newPRU.toFixed(2)} €</strong></div>
                 <div class="result-line result-highlight">💰 Valeur totale (${totalShares} actions) : <strong>${formatMoney(totalValue)}</strong></div>
             `;
+        }
+
+        function benefitClass(val) {
+            return val > 0 ? 'gain' : val < 0 ? 'loss' : 'neutral';
+        }
+
+        function benefitSign(val) {
+            return val > 0 ? '+' : '';
+        }
+
+        function simulateSell() {
+            let sellPrice = parseFloat(document.getElementById('sellPrice').value);
+            let sellShares = parseFloat(document.getElementById('sellShares').value);
+            let currentPRU = parseFloat(document.getElementById('currentPRU').value);
+            let currentShares = parseFloat(document.getElementById('currentShares').value);
+            let addShares = parseFloat(document.getElementById('addShares').value);
+            let resultDiv = document.getElementById('resultSell');
+
+            if (isNaN(sellPrice) || isNaN(sellShares) || sellShares <= 0 || sellPrice <= 0) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<div class="neutral">⚠️ Veuillez remplir le prix et le nombre d\'actions à vendre.</div>';
+                return;
+            }
+
+            let proceeds = sellPrice * sellShares;
+            let html = `<div class="result-line">💶 Produit de la vente (${sellShares} actions) : <strong>${formatMoney(proceeds)}</strong></div>`;
+
+            // P&L avec l'ancien PRU — plafonné au nombre d'actions qu'on avait AVANT l'achat
+            if (!isNaN(currentPRU) && currentPRU > 0 && !isNaN(currentShares) && currentShares > 0) {
+                let sharesOld = Math.min(sellShares, currentShares);
+                let gainOld = (sellPrice - currentPRU) * sharesOld;
+                let gainOldPct = ((sellPrice - currentPRU) / currentPRU) * 100;
+                let cls = benefitClass(gainOld);
+                let capNote = sharesOld < sellShares
+                    ? ` <span style="font-size:0.8em;color:#7f8c8d;">(limité à ${sharesOld} actions détenues avant achat)</span>`
+                    : '';
+                html += `<div class="result-line ${cls}">📌 P&L avant achat — PRU ${currentPRU.toFixed(2)} € × ${sharesOld} actions :${capNote}<br><strong>${benefitSign(gainOld)}${formatMoney(gainOld)}</strong> (${benefitSign(gainOldPct)}${gainOldPct.toFixed(2)} %)</div>`;
+            }
+
+            // P&L avec le nouveau PRU — plafonné au nombre d'actions qu'on a APRÈS l'achat
+            if (lastNewPRU !== null) {
+                let totalSharesAfter = (!isNaN(currentShares) ? currentShares : 0) + (!isNaN(addShares) ? addShares : 0);
+                let sharesNew = totalSharesAfter > 0 ? Math.min(sellShares, totalSharesAfter) : sellShares;
+                let gainNew = (sellPrice - lastNewPRU) * sharesNew;
+                let gainNewPct = ((sellPrice - lastNewPRU) / lastNewPRU) * 100;
+                let cls = benefitClass(gainNew);
+                let capNote = sharesNew < sellShares
+                    ? ` <span style="font-size:0.8em;color:#7f8c8d;">(limité à ${sharesNew} actions détenues après achat)</span>`
+                    : '';
+                html += `<div class="result-line ${cls}">🆕 P&L après achat — PRU ${lastNewPRU.toFixed(2)} € × ${sharesNew} actions :${capNote}<br><strong>${benefitSign(gainNew)}${formatMoney(gainNew)}</strong> (${benefitSign(gainNewPct)}${gainNewPct.toFixed(2)} %)</div>`;
+            } else {
+                html += `<div class="neutral result-line">ℹ️ Calculez d'abord le nouveau PRU pour voir la comparaison après achat.</div>`;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = html;
         }
     </script>
     <script>
