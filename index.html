@@ -128,13 +128,23 @@
             text-align: center;
             font-weight: bold;
         }
-        .gain {
+        .gain, .loss, .neutral {
+            color: #222;
+        }
+        .sell-value {
+            font-weight: 900;
+            font-size: 1.1em;
+        }
+        .sell-pct {
+            font-weight: 600;
+        }
+        .gain .sell-value, .gain .sell-pct {
             color: #27ae60;
         }
-        .loss {
+        .loss .sell-value, .loss .sell-pct {
             color: #e74c3c;
         }
-        .neutral {
+        .neutral .sell-value, .neutral .sell-pct {
             color: #7f8c8d;
         }
     </style>
@@ -271,7 +281,7 @@
                 let capNote = sharesOld < sellShares
                     ? ` <span style="font-size:0.8em;color:#7f8c8d;">(capped at ${sharesOld} shares held before purchase)</span>`
                     : '';
-                html += `<div class="result-line ${cls}">P&L before purchase — ACPS ${currentPRU.toFixed(2)} € × ${sharesOld} shares:${capNote}<br><strong>${benefitSign(gainOld)}${formatMoney(gainOld)}</strong> (${benefitSign(gainOldPct)}${gainOldPct.toFixed(2)} %)</div>`;
+                html += `<div class="result-line ${cls}">P&L before purchase — ACPS ${currentPRU.toFixed(2)} € × ${sharesOld} shares:${capNote}<br><span class="sell-value">${benefitSign(gainOld)}${formatMoney(gainOld)}</span> <span class="sell-pct">(${benefitSign(gainOldPct)}${gainOldPct.toFixed(2)} %)</span></div>`;
             }
 
             // P&L with the new ACPS — capped at shares held AFTER the purchase
@@ -284,7 +294,7 @@
                 let capNote = sharesNew < sellShares
                     ? ` <span style="font-size:0.8em;color:#7f8c8d;">(capped at ${sharesNew} shares held after purchase)</span>`
                     : '';
-                html += `<div class="result-line ${cls}">P&L after purchase — ACPS ${lastNewPRU.toFixed(2)} € × ${sharesNew} shares:${capNote}<br><strong>${benefitSign(gainNew)}${formatMoney(gainNew)}</strong> (${benefitSign(gainNewPct)}${gainNewPct.toFixed(2)} %)</div>`;
+                html += `<div class="result-line ${cls}">P&L after purchase — ACPS ${lastNewPRU.toFixed(2)} € × ${sharesNew} shares:${capNote}<br><span class="sell-value">${benefitSign(gainNew)}${formatMoney(gainNew)}</span> <span class="sell-pct">(${benefitSign(gainNewPct)}${gainNewPct.toFixed(2)} %)</span></div>`;
             } else {
                 html += `<div class="neutral result-line">Calculate the new ACB first to see the after-purchase comparison.</div>`;
             }
