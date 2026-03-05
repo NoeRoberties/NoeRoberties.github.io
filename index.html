@@ -32,13 +32,31 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        input {
+        input, select {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             border: 2px solid #3498db;
             border-radius: 10px;
             box-sizing: border-box;
+            background-color: #fff;
+        }
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .app-header h2 {
+            margin: 0;
+        }
+        #languageSelect {
+            width: auto;
+            margin: 0;
+            padding: 6px 10px;
+            font-size: 0.85em;
+            border-radius: 8px;
+            cursor: pointer;
         }
         button {
             width: 100%;
@@ -151,38 +169,162 @@
 </head>
 <body>
     <div class="container">
-        <h2>ACPS Calculator</h2>
-        <label for="currentPRU">Current ACPS (€)</label>
+        <div class="app-header">
+            <h2 id="appTitle">ACPS Calculator</h2>
+            <select id="languageSelect">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+            </select>
+        </div>
+
+        <label id="labelCurrentPRU" for="currentPRU">Current ACPS (€)</label>
         <input type="number" id="currentPRU" placeholder="e.g. 24.50">
-        <label for="currentShares">Current number of shares</label>
+        <label id="labelCurrentShares" for="currentShares">Current number of shares</label>
         <input type="number" id="currentShares" placeholder="e.g. 100">
         <div class="input-hint" id="hintCurrentValue"></div>
-        <label for="newSharePrice">New share price (€)</label>
+        <label id="labelNewSharePrice" for="newSharePrice">New share price (€)</label>
         <input type="number" id="newSharePrice" placeholder="e.g. 22.00">
-        <label for="addShares">Number of shares to add</label>
+        <label id="labelAddShares" for="addShares">Number of shares to add</label>
         <input type="number" id="addShares" placeholder="e.g. 50">
         <div class="input-hint" id="hintNewValue"></div>
-        <label for="transactionFees">Transaction fees (%)</label>
+        <label id="labelTransactionFees" for="transactionFees">Transaction fees (%)</label>
         <input type="number" id="transactionFees" placeholder="e.g. 0.5" value="0.5" step="0.1">
-        <button onclick="calculate()">Calculate</button>
+        <button id="calculateBtn" onclick="calculate()">Calculate</button>
         <div id="result" style="display:none;"></div>
 
         <hr class="section-divider">
-        <div class="section-title">Sell simulation — before / after purchase</div>
-        <label for="sellPrice">Sell price (€)</label>
+        <div id="sellSectionTitle" class="section-title">Sell simulation — before / after purchase</div>
+        <label id="labelSellPrice" for="sellPrice">Sell price (€)</label>
         <input type="number" id="sellPrice" placeholder="e.g. 30.00">
-        <label for="sellShares">Number of shares to sell</label>
+        <label id="labelSellShares" for="sellShares">Number of shares to sell</label>
         <input type="number" id="sellShares" placeholder="e.g. 50">
-        <button onclick="simulateSell()">Simulate sale</button>
+        <button id="simulateSellBtn" onclick="simulateSell()">Simulate sale</button>
         <div id="resultSell" style="display:none;"></div>
     </div>
 
     <script>
-        // Afficher la valeur par défaut des frais de transaction
         document.getElementById('transactionFees').value = "0.5";
 
+        const i18n = {
+            en: {
+                appTitle: 'ACPS Calculator',
+                language: 'Language',
+                labelCurrentPRU: 'Current ACPS (€)',
+                labelCurrentShares: 'Current number of shares',
+                labelNewSharePrice: 'New share price (€)',
+                labelAddShares: 'Number of shares to add',
+                labelTransactionFees: 'Transaction fees (%)',
+                calculate: 'Calculate',
+                sellTitle: 'Sell simulation — before / after purchase',
+                labelSellPrice: 'Sell price (€)',
+                labelSellShares: 'Number of shares to sell',
+                simulateSell: 'Simulate sale',
+                phPriceA: 'e.g. 24.50',
+                phSharesA: 'e.g. 100',
+                phPriceB: 'e.g. 22.00',
+                phSharesB: 'e.g. 50',
+                phFees: 'e.g. 0.5',
+                phSellPrice: 'e.g. 30.00',
+                phSellShares: 'e.g. 50',
+                hintCurrent: 'Current value: {value}',
+                hintPurchase: 'Total purchase cost: {value}',
+                resultNew: 'New ACB:',
+                resultTotal: 'Total value ({shares} shares):',
+                sellError: 'Please enter a sell price and number of shares.',
+                proceeds: 'Sale proceeds ({shares} shares):',
+                capBefore: '(capped at {shares} shares held before purchase)',
+                capAfter: '(capped at {shares} shares held after purchase)',
+                pnlBefore: 'P&L before purchase — ACPS {pru} € × {shares} shares:{cap}',
+                pnlAfter: 'P&L after purchase — ACPS {pru} € × {shares} shares:{cap}',
+                needNew: 'Calculate the new ACB first to see the after-purchase comparison.'
+            },
+            fr: {
+                appTitle: 'Calculateur de PRU',
+                language: 'Langue',
+                labelCurrentPRU: 'PRU actuel (€)',
+                labelCurrentShares: 'Nombre d\'actions actuelles',
+                labelNewSharePrice: 'Prix de la nouvelle action (€)',
+                labelAddShares: 'Nombre d\'actions à ajouter',
+                labelTransactionFees: 'Frais de transaction (%)',
+                calculate: 'Calculer',
+                sellTitle: 'Simulation de vente — avant / après achat',
+                labelSellPrice: 'Prix de vente (€)',
+                labelSellShares: 'Nombre d\'actions à vendre',
+                simulateSell: 'Simuler la vente',
+                phPriceA: 'ex : 24.50',
+                phSharesA: 'ex : 100',
+                phPriceB: 'ex : 22.00',
+                phSharesB: 'ex : 50',
+                phFees: 'ex : 0.5',
+                phSellPrice: 'ex : 30.00',
+                phSellShares: 'ex : 50',
+                hintCurrent: 'Valeur actuelle : {value}',
+                hintPurchase: 'Coût total achat : {value}',
+                resultNew: 'Nouveau PRU :',
+                resultTotal: 'Valeur totale ({shares} actions) :',
+                sellError: 'Veuillez saisir un prix de vente et un nombre d\'actions.',
+                proceeds: 'Produit de la vente ({shares} actions) :',
+                capBefore: '(limité à {shares} actions détenues avant achat)',
+                capAfter: '(limité à {shares} actions détenues après achat)',
+                pnlBefore: 'P&L avant achat — PRU {pru} € × {shares} actions:{cap}',
+                pnlAfter: 'P&L après achat — PRU {pru} € × {shares} actions:{cap}',
+                needNew: 'Calculez d\'abord le nouveau PRU pour voir la comparaison après achat.'
+            }
+        };
+
+        let currentLang = localStorage.getItem('appLang') || 'en';
+        let lastNewPRU = null;
+
+        function t(key, vars = {}) {
+            const dict = i18n[currentLang] || i18n.en;
+            let str = dict[key] || key;
+            Object.keys(vars).forEach(k => {
+                str = str.replaceAll(`{${k}}`, vars[k]);
+            });
+            return str;
+        }
+
+        function locale() {
+            return currentLang === 'fr' ? 'fr-FR' : 'en-US';
+        }
+
         function formatMoney(value) {
-            return value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+            return value.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+        }
+
+        function formatNumber(value) {
+            return value.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function applyLanguage(lang) {
+            currentLang = i18n[lang] ? lang : 'en';
+            localStorage.setItem('appLang', currentLang);
+            document.documentElement.lang = currentLang;
+
+            document.getElementById('appTitle').textContent = t('appTitle');
+            document.getElementById('labelCurrentPRU').textContent = t('labelCurrentPRU');
+            document.getElementById('labelCurrentShares').textContent = t('labelCurrentShares');
+            document.getElementById('labelNewSharePrice').textContent = t('labelNewSharePrice');
+            document.getElementById('labelAddShares').textContent = t('labelAddShares');
+            document.getElementById('labelTransactionFees').textContent = t('labelTransactionFees');
+            document.getElementById('calculateBtn').textContent = t('calculate');
+            document.getElementById('sellSectionTitle').textContent = t('sellTitle');
+            document.getElementById('labelSellPrice').textContent = t('labelSellPrice');
+            document.getElementById('labelSellShares').textContent = t('labelSellShares');
+            document.getElementById('simulateSellBtn').textContent = t('simulateSell');
+
+            document.getElementById('currentPRU').placeholder = t('phPriceA');
+            document.getElementById('currentShares').placeholder = t('phSharesA');
+            document.getElementById('newSharePrice').placeholder = t('phPriceB');
+            document.getElementById('addShares').placeholder = t('phSharesB');
+            document.getElementById('transactionFees').placeholder = t('phFees');
+            document.getElementById('sellPrice').placeholder = t('phSellPrice');
+            document.getElementById('sellShares').placeholder = t('phSellShares');
+
+            updateCurrentHint();
+            updateNewHint();
+            if (document.getElementById('result').style.display !== 'none') calculate();
+            if (document.getElementById('resultSell').style.display !== 'none') simulateSell();
         }
 
         function updateCurrentHint() {
@@ -190,7 +332,7 @@
             let shares = parseFloat(document.getElementById('currentShares').value);
             let hint = document.getElementById('hintCurrentValue');
             if (!isNaN(pru) && !isNaN(shares) && pru > 0 && shares > 0) {
-                hint.textContent = 'Current value: ' + formatMoney(pru * shares);
+                hint.textContent = t('hintCurrent', { value: formatMoney(pru * shares) });
                 hint.classList.add('active');
             } else {
                 hint.textContent = '';
@@ -205,7 +347,7 @@
             let hint = document.getElementById('hintNewValue');
             if (!isNaN(price) && !isNaN(shares) && price > 0 && shares > 0) {
                 let total = price * shares * (1 + (isNaN(fees) ? 0 : fees));
-                hint.textContent = 'Total purchase cost: ' + formatMoney(total);
+                hint.textContent = t('hintPurchase', { value: formatMoney(total) });
                 hint.classList.add('active');
             } else {
                 hint.textContent = '';
@@ -219,9 +361,6 @@
         ['newSharePrice', 'addShares', 'transactionFees'].forEach(id =>
             document.getElementById(id).addEventListener('input', updateNewHint)
         );
-
-        // Stocke le dernier newPRU calculé pour la simulation de vente
-        let lastNewPRU = null;
 
         function calculate() {
             let currentPRU = parseFloat(document.getElementById('currentPRU').value);
@@ -242,8 +381,8 @@
             const resultEl = document.getElementById('result');
             resultEl.style.display = 'block';
             resultEl.innerHTML = `
-                <div class="result-line result-highlight"><span class="label">New ACB:</span> <span class="value">${newPRU.toFixed(2)} €</span></div>
-                <div class="result-line result-highlight"><span class="label">Total value (${totalShares} shares):</span> <span class="value">${formatMoney(totalValue)}</span></div>
+                <div class="result-line result-highlight"><span class="label">${t('resultNew')}</span> <span class="value">${formatNumber(newPRU)} €</span></div>
+                <div class="result-line result-highlight"><span class="label">${t('resultTotal', { shares: totalShares })}</span> <span class="value">${formatMoney(totalValue)}</span></div>
             `;
         }
 
@@ -265,26 +404,24 @@
 
             if (isNaN(sellPrice) || isNaN(sellShares) || sellShares <= 0 || sellPrice <= 0) {
                 resultDiv.style.display = 'block';
-                resultDiv.innerHTML = '<div class="neutral">Please enter a sell price and number of shares.</div>';
+                resultDiv.innerHTML = `<div class="neutral">${t('sellError')}</div>`;
                 return;
             }
 
             let proceeds = sellPrice * sellShares;
-            let html = `<div class="result-line">Sale proceeds (${sellShares} shares): <strong>${formatMoney(proceeds)}</strong></div>`;
+            let html = `<div class="result-line">${t('proceeds', { shares: sellShares })} <strong>${formatMoney(proceeds)}</strong></div>`;
 
-            // P&L with the old ACPS — capped at shares held BEFORE the purchase
             if (!isNaN(currentPRU) && currentPRU > 0 && !isNaN(currentShares) && currentShares > 0) {
                 let sharesOld = Math.min(sellShares, currentShares);
                 let gainOld = (sellPrice - currentPRU) * sharesOld;
                 let gainOldPct = ((sellPrice - currentPRU) / currentPRU) * 100;
                 let cls = benefitClass(gainOld);
                 let capNote = sharesOld < sellShares
-                    ? ` <span style="font-size:0.8em;color:#7f8c8d;">(capped at ${sharesOld} shares held before purchase)</span>`
+                    ? ` <span style="font-size:0.8em;color:#7f8c8d;">${t('capBefore', { shares: sharesOld })}</span>`
                     : '';
-                html += `<div class="result-line ${cls}">P&L before purchase — ACPS ${currentPRU.toFixed(2)} € × ${sharesOld} shares:${capNote}<br><span class="sell-value">${benefitSign(gainOld)}${formatMoney(gainOld)}</span> <span class="sell-pct">(${benefitSign(gainOldPct)}${gainOldPct.toFixed(2)} %)</span></div>`;
+                html += `<div class="result-line ${cls}">${t('pnlBefore', { pru: formatNumber(currentPRU), shares: sharesOld, cap: capNote })}<br><span class="sell-value">${benefitSign(gainOld)}${formatMoney(gainOld)}</span> <span class="sell-pct">(${benefitSign(gainOldPct)}${formatNumber(gainOldPct)} %)</span></div>`;
             }
 
-            // P&L with the new ACPS — capped at shares held AFTER the purchase
             if (lastNewPRU !== null) {
                 let totalSharesAfter = (!isNaN(currentShares) ? currentShares : 0) + (!isNaN(addShares) ? addShares : 0);
                 let sharesNew = totalSharesAfter > 0 ? Math.min(sellShares, totalSharesAfter) : sellShares;
@@ -292,16 +429,23 @@
                 let gainNewPct = ((sellPrice - lastNewPRU) / lastNewPRU) * 100;
                 let cls = benefitClass(gainNew);
                 let capNote = sharesNew < sellShares
-                    ? ` <span style="font-size:0.8em;color:#7f8c8d;">(capped at ${sharesNew} shares held after purchase)</span>`
+                    ? ` <span style="font-size:0.8em;color:#7f8c8d;">${t('capAfter', { shares: sharesNew })}</span>`
                     : '';
-                html += `<div class="result-line ${cls}">P&L after purchase — ACPS ${lastNewPRU.toFixed(2)} € × ${sharesNew} shares:${capNote}<br><span class="sell-value">${benefitSign(gainNew)}${formatMoney(gainNew)}</span> <span class="sell-pct">(${benefitSign(gainNewPct)}${gainNewPct.toFixed(2)} %)</span></div>`;
+                html += `<div class="result-line ${cls}">${t('pnlAfter', { pru: formatNumber(lastNewPRU), shares: sharesNew, cap: capNote })}<br><span class="sell-value">${benefitSign(gainNew)}${formatMoney(gainNew)}</span> <span class="sell-pct">(${benefitSign(gainNewPct)}${formatNumber(gainNewPct)} %)</span></div>`;
             } else {
-                html += `<div class="neutral result-line">Calculate the new ACB first to see the after-purchase comparison.</div>`;
+                html += `<div class="neutral result-line">${t('needNew')}</div>`;
             }
 
             resultDiv.style.display = 'block';
             resultDiv.innerHTML = html;
         }
+
+        document.getElementById('languageSelect').addEventListener('change', (e) => {
+            applyLanguage(e.target.value);
+        });
+
+        document.getElementById('languageSelect').value = currentLang;
+        applyLanguage(currentLang);
     </script>
     <script>
         if ('serviceWorker' in navigator) {
