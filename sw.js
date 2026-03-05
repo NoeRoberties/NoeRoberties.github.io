@@ -41,35 +41,44 @@ self.addEventListener('activate', event => {
 });
 
 // Stratégie Cache First pour une expérience offline optimale
+// Network First pour les documents HTML (toujours la version à jour),
+// Cache First pour les assets statiques (images, manifeste).
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      if (cachedResponse) {
-        console.log('[Service Worker] Réponse depuis le cache:', event.request.url);
-        return cachedResponse;
-      }
-      
-      // Si pas dans le cache, on récupère depuis le réseau
-      return fetch(event.request).then(response => {
-        // On ne met en cache que les requêtes GET valides
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+  const isDocument = event.request.destination === 'document' ||
+    event.request.url.endsWith('/') ||
+    event.request.url.endsWith('/index.html');
+
+  if (isDocument) {
+    // Network First : on tente le réseau, fallback sur le cache si hors ligne
+    event.respondWith(
+      fetch(event.request).then(response => {
+        if (response && response.status === 200) {
+          const responseToCache = response.clone();
+          caches.open(cacheName).then(cache => cache.put(event.request, responseToCache));
         }
-        
-        // Clone de la réponse pour la mettre en cache
-        const responseToCache = response.clone();
-        caches.open(cacheName).then(cache => {
-          cache.put(event.request, responseToCache);
-        });
-        
         return response;
       }).catch(() => {
-        // Si hors ligne et pas dans le cache, retourner la page principale
-        console.log('[Service Worker] Hors ligne, retour à index.html');
-        if (event.request.destination === 'document') {
-          return caches.match('/index.html');
+        console.log('[Service Worker] Hors ligne, retour au cache pour:', event.request.url);
+        return caches.match(event.request) || caches.match('/index.html');
+      })
+    );
+  } else {
+    // Cache First pour les assets statiques
+    event.respondWith(
+      caches.match(event.request).then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse;
         }
-      });
-    })
-  );
+        return fetch(event.request).then(response => {
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+          const responseToCache = response.clone();
+          caches.open(cacheName).then(cache => cache.put(event.request, responseToCache));
+          return response;
+        });
+      })
+    );
+  }
 });
+
