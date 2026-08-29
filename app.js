@@ -1,30 +1,34 @@
 /* ==========================================================================
-   Celine Dion Clock - Application Logic & Web Audio API Synthesizer
+   Céline Dion Compte à Rebours & Entraînement - Logique & Synthétiseur
    ========================================================================== */
 
-// --- Global State ---
+// --- Variables Globales ---
 let audioCtx = null;
-let currentSynthNodes = []; // Track active oscillators/nodes to stop them
+let currentSynthNodes = []; // Oscillateurs et gains actifs
 let isPlaying = false;
 let playbackTimeoutId = null;
 let visualizerAnimationId = null;
 let analyserNode = null;
 
-// Quotes Database
+// État du Karaoké / Paroles
+let activeSongKey = null;
+let songStartTime = 0;
+let lyricsIntervalId = null;
+
+// Citations de Céline Dion (en Français)
 const CELINE_QUOTES = [
-    { text: "I've never been cool - and I don't care.", context: "Interview, 2013" },
-    { text: "My music is my way of speaking. It's my therapy, my strength.", context: "Press Conference" },
-    { text: "There are no rules in love, and there are no rules in music.", context: "Las Vegas Residency" },
-    { text: "If you follow your dreams, it means you follow your heart.", context: "A New Day Has Come Tour" },
-    { text: "I don't know if I'm a diva. But I'm a worker.", context: "Behind the Music" },
-    { text: "The hardest thing to find in life is balance - especially the more success you have.", context: "Vogue Interview" },
-    { text: "My heart will go on... and on, and on, and on!", context: "Behind the Scenes" },
-    { text: "I have always been a very positive person, and I think it's very important to keep moving forward.", context: "Recovery Journal" },
-    { text: "We all have our own dreams. I'm lucky I have the opportunity to live mine.", context: "Grammy Awards speech" }
+    { text: "Je n'ai jamais été branchée, et je m'en fiche royalement.", context: "Interview TV, 2013" },
+    { text: "Ma musique est ma façon de m'exprimer. C'est ma thérapie, ma force.", context: "Conférence de presse" },
+    { text: "Il n'y a pas de règles en amour, et il n'y a pas de règles en musique.", context: "Spectacle à Las Vegas" },
+    { text: "Si tu suis tes rêves, cela signifie que tu suis ton cœur.", context: "Tournée A New Day" },
+    { text: "Je ne sais pas si je suis une diva. Mais je suis une grande bosseuse.", context: "Reportage Biographique" },
+    { text: "Le plus difficile dans la vie, c'est de trouver un équilibre - surtout avec le succès.", context: "Interview Vogue" },
+    { text: "Mon cœur continuera de battre... seconde après seconde.", context: "Coulisses, Titanic Theme" },
+    { text: "J'ai toujours été une personne très positive, il faut aller de l'avant.", context: "Journal de convalescence" },
+    { text: "Nous avons tous nos propres rêves. J'ai de la chance de vivre le mien.", context: "Discours des Grammy Awards" }
 ];
 
-// Synth Songs & Notes Definitions
-// Frequencies mapping for Octave 4 and 5
+// Féquences des notes pour le synthétiseur (Octaves 3, 4 et 5)
 const NOTE_FREQS = {
     'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'B3': 246.94,
     'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
@@ -32,176 +36,133 @@ const NOTE_FREQS = {
     'C6': 1046.50, 'REST': 0
 };
 
+// Base de données des chansons avec notes (musique) et paroles synchronisées
 const SONGS = {
-    'my-heart-will-go-on-intro': {
-        title: "My Heart Will Go On (Tin Whistle Intro)",
+    'pour-que-tu-maimes-encore': {
+        title: "Pour que tu m'aimes encore",
+        instrument: "vocal",
+        tempo: 96,
+        notes: [
+            // Refrain : "J'irai chercher ton cœur..."
+            { note: 'F#4', dur: 1.0 }, { note: 'A4', dur: 1.0 }, { note: 'G#4', dur: 1.0 }, { note: 'F#4', dur: 1.0 },
+            { note: 'E4', dur: 1.0 }, { note: 'F#4', dur: 1.0 }, { note: 'REST', dur: 0.5 }, { note: 'F#4', dur: 0.5 }, { note: 'F#4', dur: 1.0 },
+            { note: 'F#4', dur: 1.0 }, { note: 'A4', dur: 1.0 }, { note: 'G#4', dur: 1.0 }, { note: 'F#4', dur: 1.0 },
+            { note: 'E4', dur: 1.0 }, { note: 'F#4', dur: 1.0 }, { note: 'REST', dur: 0.5 }, { note: 'F#4', dur: 0.5 }, { note: 'F#4', dur: 1.0 },
+            { note: 'F#4', dur: 1.0 }, { note: 'A4', dur: 1.0 }, { note: 'G#4', dur: 1.0 }, { note: 'F#4', dur: 1.0 },
+            { note: 'E4', dur: 1.0 }, { note: 'F#4', dur: 1.0 }, { note: 'A4', dur: 1.0 }, { note: 'B4', dur: 1.0 },
+            { note: 'C#5', dur: 1.5 }, { note: 'B4', dur: 1.0 }, { note: 'A4', dur: 1.0 }, { note: 'B4', dur: 2.5 }
+        ],
+        lyrics: [
+            { time: 0.0, text: "♫ Préparez-vous à chanter... ♫" },
+            { time: 1.2, text: "J'irai chercher ton cœur..." },
+            { time: 3.5, text: "Si tu l'emportes ailleurs..." },
+            { time: 6.2, text: "Même si dans tes danses..." },
+            { time: 8.8, text: "D'autres dansent tes heures..." },
+            { time: 11.2, text: "J'irai chercher ton âme..." },
+            { time: 13.6, text: "Dans les froids, dans les flammes..." },
+            { time: 16.2, text: "Je te jetterai des sorts..." },
+            { time: 18.8, text: "Pour que tu m'aimes encore..." },
+            { time: 22.0, text: "♫ Excellent ! Continuez l'entraînement ! ♫" }
+        ]
+    },
+    'my-heart-will-go-on': {
+        title: "My Heart Will Go On",
         instrument: "whistle",
-        tempo: 125, // BPM
+        tempo: 105,
         notes: [
-            { note: 'F#4', dur: 0.75 }, { note: 'G#4', dur: 0.75 }, { note: 'A4', dur: 1.5 },
-            { note: 'G#4', dur: 0.75 }, { note: 'F#4', dur: 0.75 }, { note: 'E4', dur: 1.5 },
-            { note: 'F#4', dur: 0.75 }, { note: 'B4', dur: 1.5 }, { note: 'A4', dur: 1.5 }, { note: 'G#4', dur: 2.25 },
-            
-            { note: 'F#4', dur: 0.75 }, { note: 'G#4', dur: 0.75 }, { note: 'A4', dur: 1.5 },
-            { note: 'G#4', dur: 0.75 }, { note: 'F#4', dur: 0.75 }, { note: 'E4', dur: 1.5 },
-            { note: 'D#4', dur: 1.5 }, { note: 'E4', dur: 3.0 }
-        ]
-    },
-    'my-heart-will-go-on-chorus': {
-        title: "My Heart Will Go On (Chorus)",
-        instrument: "vocal",
-        tempo: 110,
-        notes: [
-            // "Near, far, wherever you are..."
+            // Refrain : "Near, far, wherever you are..."
             { note: 'G#4', dur: 1.0 }, { note: 'A4', dur: 0.5 }, { note: 'B4', dur: 2.0 },
             { note: 'A4', dur: 1.0 }, { note: 'G#4', dur: 0.5 }, { note: 'F#4', dur: 2.0 },
             { note: 'G#4', dur: 1.0 }, { note: 'A4', dur: 0.5 }, { note: 'G#4', dur: 1.0 }, { note: 'F#4', dur: 0.5 }, { note: 'E4', dur: 2.0 },
-            { note: 'D#4', dur: 1.5 }, { note: 'E4', dur: 2.5 },
-            
-            // "I believe that the heart does go on..."
-            { note: 'G#4', dur: 1.0 }, { note: 'A4', dur: 0.5 }, { note: 'B4', dur: 2.0 },
-            { note: 'A4', dur: 1.0 }, { note: 'G#4', dur: 0.5 }, { note: 'F#4', dur: 2.0 },
-            { note: 'G#4', dur: 1.0 }, { note: 'A4', dur: 0.5 }, { note: 'G#4', dur: 1.0 }, { note: 'F#4', dur: 0.5 }, { note: 'E4', dur: 2.0 },
-            { note: 'E4', dur: 1.0 }, { note: 'D#4', dur: 1.0 }, { note: 'E4', dur: 1.0 }, { note: 'F#4', dur: 1.0 }, { note: 'G#4', dur: 3.0 }
+            { note: 'D#4', dur: 1.5 }, { note: 'E4', dur: 2.5 }
+        ],
+        lyrics: [
+            { time: 0.0, text: "♫ My Heart Will Go On ♫" },
+            { time: 1.0, text: "Near, far..." },
+            { time: 2.8, text: "Wherever you are..." },
+            { time: 5.2, text: "I believe that the heart..." },
+            { time: 8.0, text: "Does go on..." },
+            { time: 10.2, text: "Once more, you open the door..." },
+            { time: 13.0, text: "And you're here in my heart..." },
+            { time: 15.5, text: "And my heart will go on..." }
         ]
     },
-    'its-all-coming-back': {
-        title: "It's All Coming Back to Me Now",
-        instrument: "piano",
-        tempo: 130,
-        notes: [
-            // Opening piano and vocal hook
-            { note: 'C4', dur: 0.5 }, { note: 'D4', dur: 0.5 }, { note: 'E4', dur: 1.0 }, { note: 'G4', dur: 1.0 }, { note: 'A4', dur: 2.0 },
-            { note: 'G4', dur: 0.5 }, { note: 'G4', dur: 0.5 }, { note: 'G4', dur: 1.0 }, { note: 'E4', dur: 1.0 }, { note: 'D4', dur: 2.0 },
-            { note: 'C4', dur: 0.5 }, { note: 'D4', dur: 0.5 }, { note: 'E4', dur: 1.0 }, { note: 'G4', dur: 1.0 }, { note: 'A4', dur: 2.0 },
-            { note: 'B4', dur: 1.0 }, { note: 'A4', dur: 1.0 }, { note: 'G4', dur: 3.0 }
-        ]
-    },
-    'all-by-myself': {
-        title: "All By Myself (The High Note)",
+    'sil-suffisait-daimer': {
+        title: "S'il suffisait d'aimer",
         instrument: "vocal",
-        tempo: 100,
+        tempo: 90,
         notes: [
-            // High note build up and peak
-            { note: 'F#4', dur: 1.0 }, { note: 'G#4', dur: 1.0 }, { note: 'A4', dur: 1.5 },
-            { note: 'B4', dur: 1.5 }, { note: 'C#5', dur: 1.5 }, { note: 'D5', dur: 1.5 },
-            { note: 'E5', dur: 4.5 } // The peak power note!
+            // Refrain : "S'il suffisait d'aimer..."
+            { note: 'E4', dur: 1.0 }, { note: 'G4', dur: 1.0 }, { note: 'A4', dur: 1.5 },
+            { note: 'G4', dur: 0.5 }, { note: 'E4', dur: 1.0 }, { note: 'D4', dur: 2.0 },
+            { note: 'E4', dur: 1.0 }, { note: 'G4', dur: 1.0 }, { note: 'A4', dur: 1.5 },
+            { note: 'B4', dur: 1.0 }, { note: 'A4', dur: 2.5 }
+        ],
+        lyrics: [
+            { time: 0.0, text: "♫ S'il suffisait d'aimer ♫" },
+            { time: 1.0, text: "S'il suffisait d'aimer..." },
+            { time: 3.5, text: "Si l'on pouvait changer les choses..." },
+            { time: 6.2, text: "Et tout recommencer..." },
+            { time: 8.8, text: "S'il suffisait d'aimer..." },
+            { time: 11.2, text: "Nous ferions de ce monde un rêve..." }
         ]
     }
 };
 
-// --- DOM Elements ---
-const clockTime = document.getElementById('clock-time');
-const clockAmpm = document.getElementById('clock-ampm');
-const clockDate = document.getElementById('clock-date');
+// --- Éléments du DOM ---
+const cdDays = document.getElementById('cd-days');
+const cdHours = document.getElementById('cd-hours');
+const cdMinutes = document.getElementById('cd-minutes');
+const cdSeconds = document.getElementById('cd-seconds');
 
-const vinylDisc = document.getElementById('vinyl-disc');
-const btnPlay = document.getElementById('btn-play');
-const btnStop = document.getElementById('btn-stop');
-const songSelect = document.getElementById('song-select');
-const currentTrackTitle = document.getElementById('current-track-title');
-
-const tabBtns = document.querySelectorAll('.tab-btn');
-const tabContents = document.querySelectorAll('.tab-content');
-
-// Alarm Elements
-const alarmHours = document.getElementById('alarm-hours');
-const alarmMinutes = document.getElementById('alarm-minutes');
-const btnSetAlarm = document.getElementById('btn-set-alarm');
-const alarmStatusText = document.getElementById('alarm-status-text');
-const alarmModal = document.getElementById('alarm-modal');
-const btnDismissAlarm = document.getElementById('btn-dismiss-alarm');
-const alarmMelodyName = document.getElementById('alarm-melody-name');
-
-// Timer Elements
-const timerMin = document.getElementById('timer-min');
-const timerSec = document.getElementById('timer-sec');
-const btnTimerStart = document.getElementById('btn-timer-start');
-const btnTimerReset = document.getElementById('btn-timer-reset');
-const timerCountdown = document.getElementById('timer-countdown');
-
-// Stopwatch Elements
-const stopwatchTime = document.getElementById('stopwatch-time');
-const btnStopwatchStart = document.getElementById('btn-stopwatch-start');
-const btnStopwatchLap = document.getElementById('btn-stopwatch-lap');
-const btnStopwatchReset = document.getElementById('btn-stopwatch-reset');
-const lapsList = document.getElementById('laps-list');
-
-// Quotes Elements
 const quoteText = document.getElementById('quote-text');
 const quoteContext = document.getElementById('quote-context');
 const btnNextQuote = document.getElementById('btn-next-quote');
 
-// Visualizer Canvas
+// Entraînement Karaoké
+const btnLaunchTraining = document.getElementById('btn-launch-training');
+const karaokeBoard = document.getElementById('karaoke-board');
+const currentTrackName = document.getElementById('current-track-name');
+const lyricPrev = document.getElementById('lyric-prev');
+const lyricActive = document.getElementById('lyric-active');
+const lyricNext = document.getElementById('lyric-next');
+const karaokeControls = document.getElementById('karaoke-controls');
+const btnStopKaraoke = document.getElementById('btn-stop-karaoke');
+
+// Canevas de Visualisation
 const canvas = document.getElementById('audio-visualizer');
 const canvasCtx = canvas.getContext('2d');
 
-// --- Alarm State & Timer State ---
-let alarmTime = null;
-let isAlarmRinging = false;
+// --- 1. Compte à Rebours (7 Octobre 2026 à 19h30) ---
+// Note: Octobre est le mois indexé 9 en JS (0 = Janvier)
+const TARGET_DATE = new Date(2026, 9, 7, 19, 30, 0);
 
-let timerInterval = null;
-let timerTimeLeft = 0; // in seconds
-let isTimerRunning = false;
-
-let stopwatchInterval = null;
-let stopwatchStart = 0;
-let stopwatchElapsed = 0;
-let isStopwatchRunning = false;
-let stopwatchLaps = [];
-
-// Resize visualizer canvas
-function resizeCanvas() {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-// --- 1. Clock Display Ticker ---
-function updateClock() {
+function updateCountdown() {
     const now = new Date();
-    let hours = now.getHours();
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    
-    hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-    const hoursStr = String(hours).padStart(2, '0');
-    
-    clockTime.textContent = `${hoursStr}:${minutes}:${seconds}`;
-    clockAmpm.textContent = ampm;
+    const diff = TARGET_DATE - now;
 
-    // Format Date
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    clockDate.textContent = now.toLocaleDateString('en-US', options);
-
-    // Check alarm
-    if (alarmTime && !isAlarmRinging) {
-        const currentHours = now.getHours();
-        const currentMins = now.getMinutes();
-        if (currentHours === alarmTime.hours && currentMins === alarmTime.minutes && now.getSeconds() === 0) {
-            triggerAlarm();
-        }
+    if (diff <= 0) {
+        cdDays.textContent = "00";
+        cdHours.textContent = "00";
+        cdMinutes.textContent = "00";
+        cdSeconds.textContent = "00";
+        return;
     }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    cdDays.textContent = String(days).padStart(2, '0');
+    cdHours.textContent = String(hours).padStart(2, '0');
+    cdMinutes.textContent = String(minutes).padStart(2, '0');
+    cdSeconds.textContent = String(seconds).padStart(2, '0');
 }
-setInterval(updateClock, 1000);
-updateClock();
+setInterval(updateCountdown, 1000);
+updateCountdown();
 
-// --- 2. Tabs Navigation ---
-tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        tabBtns.forEach(b => b.classList.remove('active'));
-        tabContents.forEach(c => c.classList.remove('active'));
-        
-        btn.classList.add('active');
-        const tabId = btn.getAttribute('data-tab');
-        document.getElementById(`tab-${tabId}`).classList.add('active');
-    });
-});
-
-// --- 3. Quotes Generator ---
+// --- 2. Citations de Céline ---
 function showNextQuote() {
     quoteText.style.opacity = 0;
     quoteContext.style.opacity = 0;
@@ -212,14 +173,13 @@ function showNextQuote() {
         quoteContext.textContent = `— Céline Dion, ${quote.context}`;
         quoteText.style.opacity = 1;
         quoteContext.style.opacity = 1;
-    }, 200);
+    }, 250);
 }
 btnNextQuote.addEventListener('click', showNextQuote);
-// Initial quote animation styles
-quoteText.style.transition = "opacity 0.2s ease";
-quoteContext.style.transition = "opacity 0.2s ease";
+quoteText.style.transition = "opacity 0.25s ease";
+quoteContext.style.transition = "opacity 0.25s ease";
 
-// --- 4. Audio Synthesizer (Web Audio API) ---
+// --- 3. Initialisation Audio ---
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -232,100 +192,98 @@ function initAudio() {
     }
 }
 
-// Stop current synth notes
+// --- 4. Synthétiseur & Séquenceur de Notes ---
 function stopSynth() {
     clearTimeout(playbackTimeoutId);
+    clearInterval(lyricsIntervalId);
+    
     currentSynthNodes.forEach(node => {
         try {
             node.stop();
         } catch(e) {}
     });
     currentSynthNodes = [];
+    
     isPlaying = false;
-    vinylDisc.classList.remove('playing');
-    btnPlay.innerHTML = '<i class="fas fa-play"></i>';
+    activeSongKey = null;
+    
+    currentTrackName.textContent = "Choisissez un chant";
+    lyricPrev.textContent = "...";
+    lyricActive.textContent = "Cliquez ci-dessus pour vous entraîner !";
+    lyricNext.textContent = "...";
+    
+    karaokeControls.style.display = "none";
+    btnLaunchTraining.style.display = "inline-flex";
 }
 
-// Play note helper
-function playNote(freq, startTime, duration, instrumentType = 'whistle') {
-    if (freq === 0) return; // REST note
+function playNote(freq, startTime, duration, instrumentType = 'vocal') {
+    if (freq === 0) return; // Note Silence (REST)
 
     const oscNode = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
-    
-    // Low pass filter to make it sound premium and soft rather than harsh chiptune
     const filterNode = audioCtx.createBiquadFilter();
-    filterNode.type = 'lowpass';
     
-    // Delay effect node (Reverb feel)
+    filterNode.type = 'lowpass';
+
+    // Effet d'écho / delay spatial
     const delayNode = audioCtx.createDelay(1.0);
     const delayGain = audioCtx.createGain();
-    
-    delayNode.delayTime.value = 0.25; // Delay echo timing
-    delayGain.gain.value = 0.35; // Feed back volume
+    delayNode.delayTime.value = 0.3; 
+    delayGain.gain.value = 0.3; 
 
-    // Configure instrument sounds
     if (instrumentType === 'whistle') {
-        // Tin whistle flute: Triangle wave + lowpass filter + slight vibrato
+        // Flûte irlandaise : onde triangle + filtre passe-bas + vibrato
         oscNode.type = 'triangle';
-        filterNode.frequency.value = 1200;
+        filterNode.frequency.value = 1400;
         
-        // Add Vibrato (LFO)
         const lfo = audioCtx.createOscillator();
         const lfoGain = audioCtx.createGain();
-        lfo.frequency.value = 5.5; // Vibrato speed
-        lfoGain.gain.value = 4; // Vibrato depth (Hz)
-        lfo.connect(lfoGain);
-        lfoGain.connect(oscNode.frequency);
-        lfo.start(startTime);
-        currentSynthNodes.push(lfo);
-    } else if (instrumentType === 'vocal') {
-        // Diva vocal run synth: Sine wave mixed with a bit of filtered triangle for depth
-        oscNode.type = 'sine';
-        filterNode.frequency.value = 1600;
-        
-        // Portamento/Vibrato to sound like rich vocal runs
-        const lfo = audioCtx.createOscillator();
-        const lfoGain = audioCtx.createGain();
-        lfo.frequency.value = 6;
-        lfoGain.gain.value = 6;
+        lfo.frequency.value = 6; 
+        lfoGain.gain.value = 5; 
         lfo.connect(lfoGain);
         lfoGain.connect(oscNode.frequency);
         lfo.start(startTime);
         currentSynthNodes.push(lfo);
     } else {
-        // Piano/Synth pad: Triangle with quick decay
+        // Voix Céline : onde sinus + vibrato de diva pour moduler la voix
         oscNode.type = 'sine';
-        filterNode.frequency.value = 800;
+        filterNode.frequency.value = 1800;
+        
+        const lfo = audioCtx.createOscillator();
+        const lfoGain = audioCtx.createGain();
+        lfo.frequency.value = 5.5; 
+        lfoGain.gain.value = 7; 
+        lfo.connect(lfoGain);
+        lfoGain.connect(oscNode.frequency);
+        lfo.start(startTime);
+        currentSynthNodes.push(lfo);
     }
 
-    // ADSR Envelope
+    // Enveloppe sonore ADSR
     const attack = 0.08;
     const decay = 0.1;
     const sustain = 0.65;
-    const release = 0.25;
+    const release = 0.3;
     
     const sustainTime = duration - attack - decay;
     const sTime = sustainTime > 0 ? sustainTime : 0;
     
     gainNode.gain.setValueAtTime(0, startTime);
-    gainNode.gain.linearRampToValueAtTime(0.5, startTime + attack); // Peak
-    gainNode.gain.exponentialRampToValueAtTime(sustain * 0.5, startTime + attack + decay); // Sustain
-    gainNode.gain.setValueAtTime(sustain * 0.5, startTime + attack + decay + sTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration + release); // Release
+    gainNode.gain.linearRampToValueAtTime(0.4, startTime + attack); 
+    gainNode.gain.exponentialRampToValueAtTime(sustain * 0.4, startTime + attack + decay); 
+    gainNode.gain.setValueAtTime(sustain * 0.4, startTime + attack + decay + sTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration + release); 
 
-    // Connections: Osc -> Filter -> Gain -> Analyser & Delay
+    // Connexions
     oscNode.connect(filterNode);
     filterNode.connect(gainNode);
-    
-    // Main connection
     gainNode.connect(analyserNode);
 
-    // Feedback Delay loops
+    // Connexions de l'écho
     gainNode.connect(delayNode);
     delayNode.connect(delayGain);
-    delayGain.connect(delayNode); // feedback
-    delayGain.connect(analyserNode); // send to output
+    delayGain.connect(delayNode); 
+    delayGain.connect(analyserNode); 
 
     oscNode.start(startTime);
     oscNode.stop(startTime + duration + release + 0.1);
@@ -334,22 +292,25 @@ function playNote(freq, startTime, duration, instrumentType = 'whistle') {
     currentSynthNodes.push(gainNode);
 }
 
-// Play selected song
+// Jouer une chanson et synchroniser les paroles
 function playSong(songKey) {
     initAudio();
     stopSynth();
     
     isPlaying = true;
-    vinylDisc.classList.add('playing');
-    btnPlay.innerHTML = '<i class="fas fa-pause"></i>';
+    activeSongKey = songKey;
+    songStartTime = audioCtx.currentTime;
     
     const song = SONGS[songKey];
-    currentTrackTitle.textContent = song.title;
+    currentTrackName.textContent = song.title;
     
-    const beatDuration = 60 / song.tempo; // time of 1 beat in seconds
-    let playCursor = audioCtx.currentTime + 0.2; // slight padding
+    karaokeControls.style.display = "flex";
+    btnLaunchTraining.style.display = "none";
     
-    song.notes.forEach((noteObj, index) => {
+    const beatDuration = 60 / song.tempo;
+    let playCursor = audioCtx.currentTime + 0.2; 
+    
+    song.notes.forEach(noteObj => {
         const noteFreq = NOTE_FREQS[noteObj.note];
         const noteDuration = noteObj.dur * beatDuration;
         
@@ -357,39 +318,75 @@ function playSong(songKey) {
         playCursor += noteDuration;
     });
 
-    // Schedule stop state when song is finished
+    // Boucle de mise à jour des paroles du Karaoké (100ms)
+    lyricsIntervalId = setInterval(() => {
+        updateLyrics(songKey);
+    }, 100);
+
+    // Arrêt automatique à la fin
     const totalDurationSeconds = (playCursor - audioCtx.currentTime) * 1000;
     playbackTimeoutId = setTimeout(() => {
         stopSynth();
     }, totalDurationSeconds);
 }
 
-// Button Events for Player
-btnPlay.addEventListener('click', () => {
-    if (isPlaying) {
-        stopSynth();
-    } else {
-        playSong(songSelect.value);
+// Mise à jour des paroles (Board à 3 lignes)
+function updateLyrics(songKey) {
+    if (!audioCtx || !isPlaying) return;
+    
+    const elapsed = audioCtx.currentTime - songStartTime;
+    const song = SONGS[songKey];
+    const lyrics = song.lyrics;
+    
+    // Trouver l'indice de la parole active
+    let activeIndex = 0;
+    for (let i = 0; i < lyrics.length; i++) {
+        if (elapsed >= lyrics[i].time) {
+            activeIndex = i;
+        } else {
+            break;
+        }
     }
-});
-
-btnStop.addEventListener('click', () => {
-    stopSynth();
-});
-
-songSelect.addEventListener('change', () => {
-    if (isPlaying) {
-        playSong(songSelect.value);
-    } else {
-        const song = SONGS[songSelect.value];
-        currentTrackTitle.textContent = song.title;
+    
+    // Remplir les 3 lignes (Précédent, Actif, Suivant)
+    const prevText = activeIndex > 0 ? lyrics[activeIndex - 1].text : "";
+    const activeText = lyrics[activeIndex].text;
+    const nextText = activeIndex < lyrics.length - 1 ? lyrics[activeIndex + 1].text : "";
+    
+    if (lyricActive.textContent !== activeText) {
+        lyricPrev.style.opacity = 0;
+        lyricActive.style.opacity = 0;
+        lyricNext.style.opacity = 0;
+        
+        setTimeout(() => {
+            lyricPrev.textContent = prevText || " ";
+            lyricActive.textContent = activeText;
+            lyricNext.textContent = nextText || " ";
+            
+            lyricPrev.style.opacity = 0.4;
+            lyricActive.style.opacity = 1;
+            lyricNext.style.opacity = 0.4;
+        }, 150);
     }
+}
+
+// Lancement d'un entraînement aléatoire
+btnLaunchTraining.addEventListener('click', () => {
+    const songKeys = Object.keys(SONGS);
+    const randomKey = songKeys[Math.floor(Math.random() * songKeys.length)];
+    playSong(randomKey);
 });
 
-// Set default track info on load
-currentTrackTitle.textContent = SONGS[songSelect.value].title;
+btnStopKaraoke.addEventListener('click', stopSynth);
 
-// --- 5. Audio Visualizer Renderer ---
+// --- 5. Dessin du Visualiseur d'Audio ---
+function resizeCanvas() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
 function drawVisualizer() {
     visualizerAnimationId = requestAnimationFrame(drawVisualizer);
     
@@ -398,7 +395,7 @@ function drawVisualizer() {
     canvasCtx.clearRect(0, 0, width, height);
 
     if (analyserNode && isPlaying) {
-        // Draw frequency bars
+        // Mode actif : barres d'analyse audio
         const bufferLength = analyserNode.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
         analyserNode.getByteFrequencyData(dataArray);
@@ -408,36 +405,34 @@ function drawVisualizer() {
         let x = 0;
 
         for (let i = 0; i < bufferLength; i++) {
-            barHeight = dataArray[i] / 2.5; // Scale height
+            barHeight = dataArray[i] / 2.0;
 
-            // Draw glowing gradients
             const gradient = canvasCtx.createLinearGradient(0, height, 0, height - barHeight);
-            gradient.addColorStop(0, '#b76e79'); // Rose Gold
-            gradient.addColorStop(1, '#d4af37'); // Gold
+            gradient.addColorStop(0, '#b76e79'); 
+            gradient.addColorStop(1, '#d4af37'); 
 
             canvasCtx.fillStyle = gradient;
-            canvasCtx.shadowBlur = 10;
-            canvasCtx.shadowColor = 'rgba(212, 175, 55, 0.4)';
+            canvasCtx.shadowBlur = 8;
+            canvasCtx.shadowColor = 'rgba(212, 175, 55, 0.3)';
             
-            canvasCtx.fillRect(x, height - barHeight, barWidth - 2, barHeight);
+            canvasCtx.fillRect(x, height - barHeight, barWidth - 1.5, barHeight);
             x += barWidth;
         }
     } else {
-        // Idle animation: Smooth wave that matches the rhythm of the clock
+        // Mode veille : Ligne sinusoïdale fluide
         canvasCtx.shadowBlur = 0;
         canvasCtx.beginPath();
-        canvasCtx.lineWidth = 2.5;
+        canvasCtx.lineWidth = 2.0;
         
-        // Gradient color for idle wave
         const gradient = canvasCtx.createLinearGradient(0, 0, width, 0);
-        gradient.addColorStop(0, 'rgba(183, 110, 121, 0.5)');
-        gradient.addColorStop(0.5, 'rgba(212, 175, 55, 0.5)');
-        gradient.addColorStop(1, 'rgba(183, 110, 121, 0.5)');
+        gradient.addColorStop(0, 'rgba(183, 110, 121, 0.4)');
+        gradient.addColorStop(0.5, 'rgba(212, 175, 55, 0.4)');
+        gradient.addColorStop(1, 'rgba(183, 110, 121, 0.4)');
         canvasCtx.strokeStyle = gradient;
 
-        const time = Date.now() * 0.003;
+        const time = Date.now() * 0.0025;
         for (let x = 0; x < width; x++) {
-            const y = height / 2 + Math.sin(x * 0.015 + time) * 12;
+            const y = height / 2 + Math.sin(x * 0.018 + time) * 8;
             if (x === 0) {
                 canvasCtx.moveTo(x, y);
             } else {
@@ -448,182 +443,4 @@ function drawVisualizer() {
     }
 }
 drawVisualizer();
-
-// --- 6. Alarm Logic ---
-btnSetAlarm.addEventListener('click', () => {
-    const hrs = parseInt(alarmHours.value);
-    const mins = parseInt(alarmMinutes.value);
-    
-    if (isNaN(hrs) || isNaN(mins) || hrs < 0 || hrs > 23 || mins < 0 || mins > 59) {
-        alarmStatusText.textContent = "Invalid hours or minutes!";
-        alarmStatusText.style.color = "var(--danger)";
-        return;
-    }
-    
-    alarmTime = { hours: hrs, minutes: mins };
-    alarmStatusText.textContent = `Alarm set for ${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-    alarmStatusText.style.color = "var(--gold)";
-});
-
-function triggerAlarm() {
-    isAlarmRinging = true;
-    alarmModal.classList.add('active');
-    
-    // Choose the alarm song (My Heart Will Go On - Chorus is default for alarms)
-    const alarmSongKey = 'my-heart-will-go-on-chorus';
-    alarmMelodyName.textContent = SONGS[alarmSongKey].title;
-    
-    // Continuous loop of alarm melody until dismissed
-    const ring = () => {
-        if (!isAlarmRinging) return;
-        playSong(alarmSongKey);
-        // Reschedule next loop based on song duration
-        const totalDuration = SONGS[alarmSongKey].notes.reduce((acc, note) => acc + (note.dur * (60 / SONGS[alarmSongKey].tempo)), 0) + 1;
-        playbackTimeoutId = setTimeout(ring, totalDuration * 1000);
-    };
-    ring();
-}
-
-btnDismissAlarm.addEventListener('click', () => {
-    isAlarmRinging = false;
-    stopSynth();
-    alarmModal.classList.remove('active');
-    alarmStatusText.textContent = "No alarm set";
-    alarmTime = null;
-    alarmHours.value = "";
-    alarmMinutes.value = "";
-});
-
-// --- 7. Timer Logic ---
-function updateTimerDisplay() {
-    const mins = Math.floor(timerTimeLeft / 60);
-    const secs = timerTimeLeft % 60;
-    timerCountdown.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-}
-
-btnTimerStart.addEventListener('click', () => {
-    if (isTimerRunning) {
-        // Pause timer
-        clearInterval(timerInterval);
-        isTimerRunning = false;
-        btnTimerStart.textContent = "Start";
-        btnTimerStart.className = "btn btn-primary";
-    } else {
-        // Start/Resume timer
-        const minVal = parseInt(timerMin.value) || 0;
-        const secVal = parseInt(timerSec.value) || 0;
-        
-        if (!timerTimeLeft && (minVal > 0 || secVal > 0)) {
-            timerTimeLeft = minVal * 60 + secVal;
-        }
-        
-        if (timerTimeLeft > 0) {
-            isTimerRunning = true;
-            btnTimerStart.textContent = "Pause";
-            btnTimerStart.className = "btn btn-secondary";
-            updateTimerDisplay();
-            
-            timerInterval = setInterval(() => {
-                timerTimeLeft--;
-                updateTimerDisplay();
-                
-                if (timerTimeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    isTimerRunning = false;
-                    btnTimerStart.textContent = "Start";
-                    btnTimerStart.className = "btn btn-primary";
-                    triggerTimerChime();
-                }
-            }, 1000);
-        }
-    }
-});
-
-btnTimerReset.addEventListener('click', () => {
-    clearInterval(timerInterval);
-    isTimerRunning = false;
-    timerTimeLeft = 0;
-    btnTimerStart.textContent = "Start";
-    btnTimerStart.className = "btn btn-primary";
-    timerMin.value = 5;
-    timerSec.value = 0;
-    timerCountdown.textContent = "05:00";
-});
-
-function triggerTimerChime() {
-    initAudio();
-    // Rapid arpeggio chime to indicate timer completion
-    const startTime = audioCtx.currentTime;
-    const chimeNotes = ['C5', 'E5', 'G5', 'C6'];
-    chimeNotes.forEach((note, idx) => {
-        playNote(NOTE_FREQS[note], startTime + (idx * 0.12), 0.25, 'piano');
-    });
-    alert("Céline Dion Clock: Timer completed!");
-}
-
-// --- 8. Stopwatch Logic ---
-function updateStopwatchDisplay() {
-    const elapsed = stopwatchElapsed + (isStopwatchRunning ? Date.now() - stopwatchStart : 0);
-    const ms = Math.floor((elapsed % 1000) / 10);
-    const secs = Math.floor((elapsed / 1000) % 60);
-    const mins = Math.floor((elapsed / 60000) % 60);
-    const hrs = Math.floor(elapsed / 3600000);
-    
-    const msStr = String(ms).padStart(2, '0');
-    const secsStr = String(secs).padStart(2, '0');
-    const minsStr = String(mins).padStart(2, '0');
-    const hrsStr = String(hrs).padStart(2, '0');
-    
-    stopwatchTime.textContent = `${hrsStr}:${minsStr}:${secsStr}.${msStr}`;
-}
-
-btnStopwatchStart.addEventListener('click', () => {
-    if (isStopwatchRunning) {
-        // Pause stopwatch
-        stopwatchElapsed += Date.now() - stopwatchStart;
-        clearInterval(stopwatchInterval);
-        isStopwatchRunning = false;
-        btnStopwatchStart.textContent = "Start";
-        btnStopwatchStart.className = "btn btn-primary";
-        btnStopwatchLap.disabled = true;
-    } else {
-        // Start stopwatch
-        stopwatchStart = Date.now();
-        isStopwatchRunning = true;
-        btnStopwatchStart.textContent = "Pause";
-        btnStopwatchStart.className = "btn btn-secondary";
-        btnStopwatchLap.disabled = false;
-        
-        stopwatchInterval = setInterval(updateStopwatchDisplay, 33); // approx 30 fps
-    }
-});
-
-btnStopwatchLap.addEventListener('click', () => {
-    if (isStopwatchRunning) {
-        const currentLapTime = stopwatchElapsed + (Date.now() - stopwatchStart);
-        stopwatchLaps.push(currentLapTime);
-        
-        const ms = Math.floor((currentLapTime % 1000) / 10);
-        const secs = Math.floor((currentLapTime / 1000) % 60);
-        const mins = Math.floor((currentLapTime / 60000) % 60);
-        const hrs = Math.floor(currentLapTime / 3600000);
-        
-        const timeStr = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
-        
-        const li = document.createElement('li');
-        li.innerHTML = `<span class="lap-index">Lap ${stopwatchLaps.length}</span><span class="lap-time">${timeStr}</span>`;
-        lapsList.prepend(li);
-    }
-});
-
-btnStopwatchReset.addEventListener('click', () => {
-    clearInterval(stopwatchInterval);
-    isStopwatchRunning = false;
-    stopwatchElapsed = 0;
-    stopwatchLaps = [];
-    btnStopwatchStart.textContent = "Start";
-    btnStopwatchStart.className = "btn btn-primary";
-    btnStopwatchLap.disabled = true;
-    stopwatchTime.textContent = "00:00:00.00";
-    lapsList.innerHTML = "";
-});
+updateCountdown();
