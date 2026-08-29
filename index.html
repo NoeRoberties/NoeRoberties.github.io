@@ -3,493 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRU Calculator</title>
+    <title>Céline Dion Clock — Interactive Diva Experience</title>
+    <meta name="description" content="A premium, interactive Céline Dion-themed web clock featuring digital and analog visualizations, customizable alarms, timers, and Web Audio API synthesized performances of her legendary hits.">
     
-    <!-- PWA Configuration -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#3498db">
-    <meta name="description" content="Average Cost Basis (ACPS) calculator for your stock positions">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@100;300;400;600;800&family=Playfair+Display:ital,wght@1,600;1,800&display=swap" rel="stylesheet">
     
-    <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="PRU_logo_192.png">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- iOS meta tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="PRU Calculator">
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 2px solid #3498db;
-            border-radius: 10px;
-            box-sizing: border-box;
-            background-color: #fff;
-        }
-        .app-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-        .app-header h2 {
-            margin: 0;
-        }
-        #languageSelect {
-            width: auto;
-            margin: 0;
-            padding: 6px 10px;
-            font-size: 0.85em;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        #result {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #ecf0f1;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: bold;
-            color: #27ae60;
-        }
-        .result-line {
-            padding: 6px 0;
-            border-bottom: 1px solid #dce1e7;
-            font-size: 0.95em;
-        }
-        .result-line:last-child {
-            border-bottom: none;
-        }
-        .result-highlight {
-            font-size: 1.1em;
-            color: #2980b9;
-            padding-top: 8px;
-        }
-        .result-highlight .label {
-            font-weight: 400;
-            font-size: 0.9em;
-            color: #5a6a7a;
-        }
-        .result-highlight .value {
-            font-weight: 800;
-            font-size: 1.15em;
-            color: #2980b9;
-        }
-        label {
-            display: block;
-            font-size: 0.82em;
-            font-weight: 600;
-            color: #5a6a7a;
-            margin: 12px 0 3px 4px;
-            letter-spacing: 0.02em;
-            text-transform: uppercase;
-        }
-        .input-hint {
-            font-size: 0.85em;
-            color: #7f8c8d;
-            text-align: right;
-            margin: -6px 0 6px 0;
-            min-height: 18px;
-            transition: color 0.2s;
-        }
-        .input-hint.active {
-            color: #27ae60;
-            font-weight: bold;
-        }
-        .section-divider {
-            border: none;
-            border-top: 2px dashed #d0d9e2;
-            margin: 20px 0 8px 0;
-        }
-        .section-title {
-            font-size: 0.9em;
-            font-weight: 900;
-            color: #3498db;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin: 0 0 4px 2px;
-        }
-        #resultSell {
-            margin-top: 14px;
-            padding: 10px;
-            background-color: #ecf0f1;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: bold;
-        }
-        .gain, .loss, .neutral {
-            color: #222;
-        }
-        .sell-value {
-            font-weight: 900;
-            font-size: 1.1em;
-        }
-        .sell-pct {
-            font-weight: 600;
-        }
-        .gain .sell-value, .gain .sell-pct {
-            color: #27ae60;
-        }
-        .loss .sell-value, .loss .sell-pct {
-            color: #e74c3c;
-        }
-        .neutral .sell-value, .neutral .sell-pct {
-            color: #7f8c8d;
-        }
-    </style>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <div class="app-header">
-            <h2 id="appTitle">ACPS Calculator</h2>
-            <select id="languageSelect">
-                <option value="en">English</option>
-                <option value="fr">Français</option>
-            </select>
+    <div class="app-background"></div>
+    <div class="overlay"></div>
+
+    <main class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">CÉLINE DION <span class="accent-text">CLOCK</span></h1>
+            <p class="tagline">"My heart will go on... second by second."</p>
+        </header>
+
+        <!-- Main Grid Layout -->
+        <div class="main-grid">
+            <!-- Left Column: Clock and Visualizer -->
+            <section class="card glass clock-card">
+                <div class="clock-display">
+                    <div class="time-main" id="clock-time">12:00:00</div>
+                    <div class="time-ampm" id="clock-ampm">PM</div>
+                    <div class="date-display" id="clock-date">Saturday, August 29, 2026</div>
+                </div>
+                
+                <!-- Audio Visualizer Canvas -->
+                <div class="visualizer-container">
+                    <canvas id="audio-visualizer"></canvas>
+                </div>
+            </section>
+
+            <!-- Right Column: Player and Tabs -->
+            <div class="right-column">
+                <!-- Music Player Card -->
+                <section class="card glass player-card">
+                    <div class="player-content">
+                        <div class="vinyl-container">
+                            <div class="vinyl" id="vinyl-disc">
+                                <div class="vinyl-label">
+                                    <div class="vinyl-groove-center"></div>
+                                    <span class="vinyl-title">CÉLINE</span>
+                                </div>
+                            </div>
+                            <div class="tone-arm" id="tone-arm"></div>
+                        </div>
+                        
+                        <div class="player-controls">
+                            <div class="track-info">
+                                <h3 id="current-track-title">Select a Song</h3>
+                                <p id="current-track-artist">Céline Dion (Synth Orchestrations)</p>
+                            </div>
+                            
+                            <div class="song-select-wrapper">
+                                <select id="song-select" class="custom-select">
+                                    <option value="my-heart-will-go-on-intro">My Heart Will Go On (Tin Whistle Intro)</option>
+                                    <option value="my-heart-will-go-on-chorus">My Heart Will Go On (Chorus)</option>
+                                    <option value="its-all-coming-back">It's All Coming Back to Me Now</option>
+                                    <option value="all-by-myself">All By Myself (The High Note)</option>
+                                </select>
+                            </div>
+
+                            <div class="control-buttons">
+                                <button id="btn-play" class="btn btn-circle" aria-label="Play Music">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button id="btn-stop" class="btn btn-circle btn-secondary" aria-label="Stop Music">
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tools & Features Tabs -->
+                <section class="card glass features-card">
+                    <div class="tabs-header">
+                        <button class="tab-btn active" data-tab="alarm">
+                            <i class="fa-solid fa-bell"></i> Alarm
+                        </button>
+                        <button class="tab-btn" data-tab="timer">
+                            <i class="fa-solid fa-hourglass-half"></i> Timer
+                        </button>
+                        <button class="tab-btn" data-tab="stopwatch">
+                            <i class="fa-solid fa-stopwatch"></i> Stopwatch
+                        </button>
+                        <button class="tab-btn" data-tab="quotes">
+                            <i class="fa-solid fa-quote-left"></i> Quotes
+                        </button>
+                    </div>
+
+                    <div class="tab-content-container">
+                        <!-- Alarm Tab -->
+                        <div class="tab-content active" id="tab-alarm">
+                            <div class="alarm-setup">
+                                <div class="time-picker">
+                                    <input type="number" id="alarm-hours" min="0" max="23" placeholder="HH">
+                                    <span>:</span>
+                                    <input type="number" id="alarm-minutes" min="0" max="59" placeholder="MM">
+                                </div>
+                                <button id="btn-set-alarm" class="btn btn-primary">Set Alarm</button>
+                            </div>
+                            <div class="alarm-status" id="alarm-status-text">No alarm set</div>
+                            <div class="alarm-melody-info">
+                                <small><i class="fa-solid fa-circle-info"></i> When the alarm triggers, Céline will sing you awake with a custom synthesizer solo.</small>
+                            </div>
+                        </div>
+
+                        <!-- Timer Tab -->
+                        <div class="tab-content" id="tab-timer">
+                            <div class="timer-setup">
+                                <div class="timer-picker">
+                                    <input type="number" id="timer-min" min="0" max="99" placeholder="MIN" value="5">
+                                    <span>m</span>
+                                    <input type="number" id="timer-sec" min="0" max="59" placeholder="SEC" value="0">
+                                    <span>s</span>
+                                </div>
+                                <div class="control-buttons flex-row">
+                                    <button id="btn-timer-start" class="btn btn-primary">Start</button>
+                                    <button id="btn-timer-reset" class="btn btn-secondary">Reset</button>
+                                </div>
+                            </div>
+                            <div class="timer-display" id="timer-countdown">05:00</div>
+                        </div>
+
+                        <!-- Stopwatch Tab -->
+                        <div class="tab-content" id="tab-stopwatch">
+                            <div class="stopwatch-display" id="stopwatch-time">00:00:00.00</div>
+                            <div class="control-buttons flex-row">
+                                <button id="btn-stopwatch-start" class="btn btn-primary">Start</button>
+                                <button id="btn-stopwatch-lap" class="btn btn-secondary" disabled>Lap</button>
+                                <button id="btn-stopwatch-reset" class="btn btn-danger">Reset</button>
+                            </div>
+                            <ul class="laps-list" id="laps-list"></ul>
+                        </div>
+
+                        <!-- Quotes Tab -->
+                        <div class="tab-content" id="tab-quotes">
+                            <div class="quote-box">
+                                <p id="quote-text">"I've never been cool - and I don't care."</p>
+                                <cite id="quote-context">— Céline Dion</cite>
+                            </div>
+                            <button id="btn-next-quote" class="btn btn-secondary">Next Quote</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
         </div>
 
-        <label id="labelCurrentPRU" for="currentPRU">Current ACPS (€)</label>
-        <input type="number" id="currentPRU" placeholder="e.g. 24.50">
-        <label id="labelCurrentShares" for="currentShares">Current number of shares</label>
-        <input type="number" id="currentShares" placeholder="e.g. 100">
-        <div class="input-hint" id="hintCurrentValue"></div>
-        <label id="labelNewSharePrice" for="newSharePrice">New share price (€)</label>
-        <input type="number" id="newSharePrice" placeholder="e.g. 22.00">
-        <label id="labelAddShares" for="addShares">Number of shares to add</label>
-        <input type="number" id="addShares" placeholder="e.g. 50">
-        <div class="input-hint" id="hintNewValue"></div>
-        <label id="labelTransactionFees" for="transactionFees">Transaction fees (%)</label>
-        <input type="number" id="transactionFees" placeholder="e.g. 0.5" value="0.5" step="0.1">
-        <button id="calculateBtn" onclick="calculate()">Calculate</button>
-        <div id="result" style="display:none;"></div>
+        <!-- Footer / Restore instructions -->
+        <footer class="footer">
+            <p>© 2026 Celine Dion Clock. Built with love and Web Audio API.</p>
+            <p class="restore-guide">
+                <i class="fa-solid fa-code-branch"></i> Want to restore the PRU Calculator? 
+                <code>git checkout pru-calculator</code> (or run the backup restore script).
+            </p>
+        </footer>
+    </main>
 
-        <hr class="section-divider">
-        <div id="sellSectionTitle" class="section-title">Sell simulation — before / after purchase</div>
-        <label id="labelSellPrice" for="sellPrice">Sell price (€)</label>
-        <input type="number" id="sellPrice" placeholder="e.g. 30.00">
-        <label id="labelSellShares" for="sellShares">Number of shares to sell</label>
-        <input type="number" id="sellShares" placeholder="e.g. 50">
-        <button id="simulateSellBtn" onclick="simulateSell()">Simulate sale</button>
-        <div id="resultSell" style="display:none;"></div>
+    <!-- Alarm Overlay Modal -->
+    <div class="alarm-modal-overlay" id="alarm-modal">
+        <div class="alarm-modal-content glass">
+            <div class="bell-icon-animated">
+                <i class="fa-solid fa-bell"></i>
+            </div>
+            <h2>WAKE UP!</h2>
+            <p>It is time to rise and shine, diva style!</p>
+            <div class="playing-melody-text">
+                Playing: <strong id="alarm-melody-name">My Heart Will Go On</strong>
+            </div>
+            <button id="btn-dismiss-alarm" class="btn btn-primary btn-large">Dismiss Alarm</button>
+        </div>
     </div>
 
-    <script>
-        document.getElementById('transactionFees').value = "0.5";
-
-        const i18n = {
-            en: {
-                appTitle: 'ACPS Calculator',
-                language: 'Language',
-                labelCurrentPRU: 'Current ACPS (€)',
-                labelCurrentShares: 'Current number of shares',
-                labelNewSharePrice: 'New share price (€)',
-                labelAddShares: 'Number of shares to add',
-                labelTransactionFees: 'Transaction fees (%)',
-                calculate: 'Calculate',
-                sellTitle: 'Sell simulation — before / after purchase',
-                labelSellPrice: 'Sell price (€)',
-                labelSellShares: 'Number of shares to sell',
-                simulateSell: 'Simulate sale',
-                phPriceA: 'e.g. 24.50',
-                phSharesA: 'e.g. 100',
-                phPriceB: 'e.g. 22.00',
-                phSharesB: 'e.g. 50',
-                phFees: 'e.g. 0.5',
-                phSellPrice: 'e.g. 30.00',
-                phSellShares: 'e.g. 50',
-                hintCurrent: 'Current value: {value}',
-                hintPurchase: 'Total purchase cost: {value}',
-                resultNew: 'New ACB:',
-                resultTotal: 'Total value ({shares} shares):',
-                sellError: 'Please enter a sell price and number of shares.',
-                proceeds: 'Sale proceeds ({shares} shares):',
-                capBefore: '(capped at {shares} shares held before purchase)',
-                capAfter: '(capped at {shares} shares held after purchase)',
-                pnlBefore: 'P&L before purchase — ACPS {pru} € × {shares} shares:{cap}',
-                pnlAfter: 'P&L after purchase — ACPS {pru} € × {shares} shares:{cap}',
-                needNew: 'Calculate the new ACB first to see the after-purchase comparison.'
-            },
-            fr: {
-                appTitle: 'Calculateur de PRU',
-                language: 'Langue',
-                labelCurrentPRU: 'PRU actuel (€)',
-                labelCurrentShares: 'Nombre d\'actions actuelles',
-                labelNewSharePrice: 'Prix de la nouvelle action (€)',
-                labelAddShares: 'Nombre d\'actions à ajouter',
-                labelTransactionFees: 'Frais de transaction (%)',
-                calculate: 'Calculer',
-                sellTitle: 'Simulation de vente — avant / après achat',
-                labelSellPrice: 'Prix de vente (€)',
-                labelSellShares: 'Nombre d\'actions à vendre',
-                simulateSell: 'Simuler la vente',
-                phPriceA: 'ex : 24.50',
-                phSharesA: 'ex : 100',
-                phPriceB: 'ex : 22.00',
-                phSharesB: 'ex : 50',
-                phFees: 'ex : 0.5',
-                phSellPrice: 'ex : 30.00',
-                phSellShares: 'ex : 50',
-                hintCurrent: 'Valeur actuelle : {value}',
-                hintPurchase: 'Coût total achat : {value}',
-                resultNew: 'Nouveau PRU :',
-                resultTotal: 'Valeur totale ({shares} actions) :',
-                sellError: 'Veuillez saisir un prix de vente et un nombre d\'actions.',
-                proceeds: 'Produit de la vente ({shares} actions) :',
-                capBefore: '(limité à {shares} actions détenues avant achat)',
-                capAfter: '(limité à {shares} actions détenues après achat)',
-                pnlBefore: 'P&L avant achat — PRU {pru} € × {shares} actions:{cap}',
-                pnlAfter: 'P&L après achat — PRU {pru} € × {shares} actions:{cap}',
-                needNew: 'Calculez d\'abord le nouveau PRU pour voir la comparaison après achat.'
-            }
-        };
-
-        let currentLang = localStorage.getItem('appLang') || 'en';
-        let lastNewPRU = null;
-
-        function t(key, vars = {}) {
-            const dict = i18n[currentLang] || i18n.en;
-            let str = dict[key] || key;
-            Object.keys(vars).forEach(k => {
-                str = str.replaceAll(`{${k}}`, vars[k]);
-            });
-            return str;
-        }
-
-        function locale() {
-            return currentLang === 'fr' ? 'fr-FR' : 'en-US';
-        }
-
-        function formatMoney(value) {
-            return value.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-        }
-
-        function formatNumber(value) {
-            return value.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-
-        function applyLanguage(lang) {
-            currentLang = i18n[lang] ? lang : 'en';
-            localStorage.setItem('appLang', currentLang);
-            document.documentElement.lang = currentLang;
-
-            document.getElementById('appTitle').textContent = t('appTitle');
-            document.getElementById('labelCurrentPRU').textContent = t('labelCurrentPRU');
-            document.getElementById('labelCurrentShares').textContent = t('labelCurrentShares');
-            document.getElementById('labelNewSharePrice').textContent = t('labelNewSharePrice');
-            document.getElementById('labelAddShares').textContent = t('labelAddShares');
-            document.getElementById('labelTransactionFees').textContent = t('labelTransactionFees');
-            document.getElementById('calculateBtn').textContent = t('calculate');
-            document.getElementById('sellSectionTitle').textContent = t('sellTitle');
-            document.getElementById('labelSellPrice').textContent = t('labelSellPrice');
-            document.getElementById('labelSellShares').textContent = t('labelSellShares');
-            document.getElementById('simulateSellBtn').textContent = t('simulateSell');
-
-            document.getElementById('currentPRU').placeholder = t('phPriceA');
-            document.getElementById('currentShares').placeholder = t('phSharesA');
-            document.getElementById('newSharePrice').placeholder = t('phPriceB');
-            document.getElementById('addShares').placeholder = t('phSharesB');
-            document.getElementById('transactionFees').placeholder = t('phFees');
-            document.getElementById('sellPrice').placeholder = t('phSellPrice');
-            document.getElementById('sellShares').placeholder = t('phSellShares');
-
-            updateCurrentHint();
-            updateNewHint();
-            if (document.getElementById('result').style.display !== 'none') calculate();
-            if (document.getElementById('resultSell').style.display !== 'none') simulateSell();
-        }
-
-        function updateCurrentHint() {
-            let pru = parseFloat(document.getElementById('currentPRU').value);
-            let shares = parseFloat(document.getElementById('currentShares').value);
-            let hint = document.getElementById('hintCurrentValue');
-            if (!isNaN(pru) && !isNaN(shares) && pru > 0 && shares > 0) {
-                hint.textContent = t('hintCurrent', { value: formatMoney(pru * shares) });
-                hint.classList.add('active');
-            } else {
-                hint.textContent = '';
-                hint.classList.remove('active');
-            }
-        }
-
-        function updateNewHint() {
-            let price = parseFloat(document.getElementById('newSharePrice').value);
-            let shares = parseFloat(document.getElementById('addShares').value);
-            let fees = parseFloat(document.getElementById('transactionFees').value) / 100;
-            let hint = document.getElementById('hintNewValue');
-            if (!isNaN(price) && !isNaN(shares) && price > 0 && shares > 0) {
-                let total = price * shares * (1 + (isNaN(fees) ? 0 : fees));
-                hint.textContent = t('hintPurchase', { value: formatMoney(total) });
-                hint.classList.add('active');
-            } else {
-                hint.textContent = '';
-                hint.classList.remove('active');
-            }
-        }
-
-        ['currentPRU', 'currentShares'].forEach(id =>
-            document.getElementById(id).addEventListener('input', updateCurrentHint)
-        );
-        ['newSharePrice', 'addShares', 'transactionFees'].forEach(id =>
-            document.getElementById(id).addEventListener('input', updateNewHint)
-        );
-
-        function calculate() {
-            let currentPRU = parseFloat(document.getElementById('currentPRU').value);
-            let currentShares = parseFloat(document.getElementById('currentShares').value);
-            let newSharePrice = parseFloat(document.getElementById('newSharePrice').value);
-            let addShares = parseFloat(document.getElementById('addShares').value);
-            let transactionFees = parseFloat(document.getElementById('transactionFees').value) / 100;
-
-            let totalNewShares = newSharePrice * addShares;
-            let fees = totalNewShares * transactionFees;
-
-            let newPRU = ((currentPRU * currentShares) + totalNewShares + fees) / (currentShares + addShares);
-            let totalShares = currentShares + addShares;
-            let totalValue = newPRU * totalShares;
-
-            lastNewPRU = newPRU;
-
-            const resultEl = document.getElementById('result');
-            resultEl.style.display = 'block';
-            resultEl.innerHTML = `
-                <div class="result-line result-highlight"><span class="label">${t('resultNew')}</span> <span class="value">${formatNumber(newPRU)} €</span></div>
-                <div class="result-line result-highlight"><span class="label">${t('resultTotal', { shares: totalShares })}</span> <span class="value">${formatMoney(totalValue)}</span></div>
-            `;
-        }
-
-        function benefitClass(val) {
-            return val > 0 ? 'gain' : val < 0 ? 'loss' : 'neutral';
-        }
-
-        function benefitSign(val) {
-            return val > 0 ? '+' : '';
-        }
-
-        function simulateSell() {
-            let sellPrice = parseFloat(document.getElementById('sellPrice').value);
-            let sellShares = parseFloat(document.getElementById('sellShares').value);
-            let currentPRU = parseFloat(document.getElementById('currentPRU').value);
-            let currentShares = parseFloat(document.getElementById('currentShares').value);
-            let addShares = parseFloat(document.getElementById('addShares').value);
-            let resultDiv = document.getElementById('resultSell');
-
-            if (isNaN(sellPrice) || isNaN(sellShares) || sellShares <= 0 || sellPrice <= 0) {
-                resultDiv.style.display = 'block';
-                resultDiv.innerHTML = `<div class="neutral">${t('sellError')}</div>`;
-                return;
-            }
-
-            let proceeds = sellPrice * sellShares;
-            let html = `<div class="result-line">${t('proceeds', { shares: sellShares })} <strong>${formatMoney(proceeds)}</strong></div>`;
-
-            if (!isNaN(currentPRU) && currentPRU > 0 && !isNaN(currentShares) && currentShares > 0) {
-                let sharesOld = Math.min(sellShares, currentShares);
-                let gainOld = (sellPrice - currentPRU) * sharesOld;
-                let gainOldPct = ((sellPrice - currentPRU) / currentPRU) * 100;
-                let cls = benefitClass(gainOld);
-                let capNote = sharesOld < sellShares
-                    ? ` <span style="font-size:0.8em;color:#7f8c8d;">${t('capBefore', { shares: sharesOld })}</span>`
-                    : '';
-                html += `<div class="result-line ${cls}">${t('pnlBefore', { pru: formatNumber(currentPRU), shares: sharesOld, cap: capNote })}<br><span class="sell-value">${benefitSign(gainOld)}${formatMoney(gainOld)}</span> <span class="sell-pct">(${benefitSign(gainOldPct)}${formatNumber(gainOldPct)} %)</span></div>`;
-            }
-
-            if (lastNewPRU !== null) {
-                let totalSharesAfter = (!isNaN(currentShares) ? currentShares : 0) + (!isNaN(addShares) ? addShares : 0);
-                let sharesNew = totalSharesAfter > 0 ? Math.min(sellShares, totalSharesAfter) : sellShares;
-                let gainNew = (sellPrice - lastNewPRU) * sharesNew;
-                let gainNewPct = ((sellPrice - lastNewPRU) / lastNewPRU) * 100;
-                let cls = benefitClass(gainNew);
-                let capNote = sharesNew < sellShares
-                    ? ` <span style="font-size:0.8em;color:#7f8c8d;">${t('capAfter', { shares: sharesNew })}</span>`
-                    : '';
-                html += `<div class="result-line ${cls}">${t('pnlAfter', { pru: formatNumber(lastNewPRU), shares: sharesNew, cap: capNote })}<br><span class="sell-value">${benefitSign(gainNew)}${formatMoney(gainNew)}</span> <span class="sell-pct">(${benefitSign(gainNewPct)}${formatNumber(gainNewPct)} %)</span></div>`;
-            } else {
-                html += `<div class="neutral result-line">${t('needNew')}</div>`;
-            }
-
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = html;
-        }
-
-        document.getElementById('languageSelect').addEventListener('change', (e) => {
-            applyLanguage(e.target.value);
-        });
-
-        document.getElementById('languageSelect').value = currentLang;
-        applyLanguage(currentLang);
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered successfully:', registration.scope);
-                        
-                        // Check for updates every hour
-                        setInterval(() => {
-                            registration.update();
-                            console.log('Checking for updates...');
-                        }, 3600000); // 1 hour
-                        
-                        // Check immediately for an update
-                        registration.update();
-                    })
-                    .catch(err => {
-                        console.log('Service Worker registration failed:', err);
-                    });
-                
-                // Detect when a new Service Worker is waiting
-                navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    console.log('New version detected, reloading...');
-                    window.location.reload();
-                });
-            });
-        }
-
-        // Detect PWA install prompt
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            console.log('The app can be installed');
-        });
-
-        // Notify when the app is installed
-        window.addEventListener('appinstalled', () => {
-            console.log('PWA installed successfully!');
-            deferredPrompt = null;
-        });
-    </script>
-
+    <!-- Custom JS -->
+    <script src="app.js"></script>
 </body>
 </html>
-
